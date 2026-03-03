@@ -1,0 +1,133 @@
+{
+  "projectType": "saas",
+  "projectName": "Your Bible",
+  "projectDescription": "A modern, full-stack Bible application with multiple translations, verse collections, rich text notes, and AI-powered story generation.",
+  "theme": "palm",
+  "primaryColor": "#8B4513",
+  "lightColor": "#D4A574",
+  "darkColor": "#5C2E0A",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "installation"
+            ]
+          },
+          {
+            "group": "Core Features",
+            "pages": [
+              "features/bible-reading",
+              "features/search",
+              "features/collections",
+              "features/notes",
+              "features/ai-stories"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/authentication",
+              "guides/configuration",
+              "guides/convex-setup",
+              "guides/deployment"
+            ]
+          },
+          {
+            "group": "Architecture",
+            "pages": [
+              "architecture/overview",
+              "architecture/tech-stack",
+              "architecture/project-structure"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Server Actions",
+            "pages": [
+              "api/server-actions/bible",
+              "api/server-actions/auth"
+            ]
+          },
+          {
+            "group": "Convex Functions",
+            "pages": [
+              "api/convex/collections",
+              "api/convex/notes",
+              "api/convex/stories",
+              "api/convex/verse-collections"
+            ]
+          },
+          {
+            "group": "Components",
+            "pages": [
+              "api/components/bible",
+              "api/components/collections",
+              "api/components/stories",
+              "api/components/ui"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Development",
+        "groups": [
+          {
+            "group": "Contributing",
+            "pages": [
+              "development/contributing",
+              "development/local-setup",
+              "development/project-structure"
+            ]
+          },
+          {
+            "group": "Reference",
+            "pages": [
+              "development/environment-variables",
+              "development/database-schema",
+              "development/integrations"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Multiple Bible translations via API.Bible integration",
+    "Advanced scripture search with highlighted results",
+    "Personal verse collections for organizing favorite passages",
+    "Rich text notes with Plate.js editor for Bible chapters",
+    "AI-powered story generation using Google Gemini",
+    "Secure authentication with Better Auth",
+    "Real-time data sync with Convex backend",
+    "Responsive design for desktop and mobile"
+  ],
+  "publicApiSurface": [
+    "getBibles() - Fetch available Bible translations",
+    "getBooks(bibleId) - Get books for a Bible translation",
+    "getChapter(bibleId, chapterId) - Retrieve chapter content",
+    "searchVerse(bibleId, query, offset) - Search Bible verses",
+    "createCollection(name, userId) - Create verse collection",
+    "getCollection(id, userId) - Get collection with verses",
+    "updateCollection(id, name, userId) - Update collection name",
+    "deleteCollection(id, userId) - Delete collection",
+    "addVerseToCollection(collectionId, verse) - Add verse to collection",
+    "removeVerseFromCollection(verseId, userId) - Remove verse from collection",
+    "createNote(chapterId, content, userId) - Create chapter note",
+    "getNote(chapterId, userId) - Get note for chapter",
+    "updateNote(chapterId, content, userId) - Update chapter note",
+    "createStory(params) - Generate AI-powered story",
+    "getStories(userId) - List user's stories",
+    "getStory(id, userId) - Get single story",
+    "deleteStory(id, userId) - Delete story"
+  ]
+}
