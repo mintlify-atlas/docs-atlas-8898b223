@@ -1,0 +1,135 @@
+---
+title: Bible Reading
+description: Read and study the Bible with multiple translations and intuitive navigation
+---
+
+The Bible Reading feature provides a modern, user-friendly interface for reading Scripture across multiple translations with seamless navigation and verse highlighting.
+
+## Multiple Bible Translations
+
+Access various Bible versions powered by API.Bible integration:
+
+<Steps>
+  <Step title="Select a Translation">
+    Click on the Bible translation dropdown at the top of the reading interface. A searchable list of available translations will appear.
+  </Step>
+  
+  <Step title="Search or Browse">
+    Type to search for a specific translation (e.g., "KJV", "NIV", "ESV") or scroll through the available options.
+  </Step>
+  
+  <Step title="Switch Translations">
+    Select your preferred translation. The current chapter will automatically reload in the selected version.
+  </Step>
+</Steps>
+
+<Info>
+  Your selected translation is preserved in the URL, making it easy to bookmark or share specific passages in your preferred version.
+</Info>
+
+## Chapter Navigation
+
+Navigate through the Bible with intuitive controls:
+
+### Using Navigation Arrows
+
+The chapter navigation provides left and right arrow buttons:
+
+- **Left Arrow**: Navigate to the previous chapter
+- **Right Arrow**: Navigate to the next chapter
+
+Navigation arrows automatically disable when you reach the beginning or end of the Bible.
+
+### Book and Chapter Selection
+
+Beyond arrow navigation, you can:
+
+1. **Jump to any book** using the book selector
+2. **Select a specific chapter** from the chapter list
+3. **Use URL parameters** to link directly to any passage
+
+<Note>
+  Chapter navigation respects the structure of your selected Bible translation, as different versions may organize books and chapters differently.
+</Note>
+
+## Verse Highlighting
+
+Highlight specific verses for focused study:
+
+### Automatic Highlighting
+
+When you:
+- Click a verse reference from search results
+- Navigate from a collection
+- Use a URL with a verse parameter (e.g., `?verse=JHN.3.16`)
+
+The page will automatically:
+1. Scroll to the verse
+2. Highlight it for easy identification
+3. Keep it in focus on the screen
+
+### Linking to Verses
+
+Share or bookmark specific verses by using verse references in your URL. The format follows the pattern:
+
+```
+/bible?bible=BIBLE_ID&chapter=CHAPTER_ID&verse=VERSE_ID
+```
+
+<Card title="Example" icon="link">
+  Navigate to John 3:16 in the King James Version:
+  `/bible?bible=de4e12af7f28f599-02&chapter=JHN.3&verse=JHN.3.16`
+</Card>
+
+## Reading Experience
+
+### Desktop Experience
+
+On desktop devices, the Bible reading interface offers:
+
+- **Wide reading area** for comfortable extended reading sessions
+- **Side-by-side notes panel** to view your personal notes alongside the Scripture
+- **Persistent navigation controls** that remain accessible while scrolling
+- **Clear verse formatting** with verse numbers for easy reference
+
+### Mobile Experience
+
+The mobile interface is optimized for smaller screens:
+
+- **Full-width text** for maximum readability
+- **Touch-friendly controls** for translation and chapter selection
+- **Swipe-friendly navigation** with responsive arrow buttons
+- **Sheet-based notes** that appear as a slide-up panel to maximize reading space
+
+<Info>
+  The reading interface automatically adapts to your device size, providing the best experience whether you're on a phone, tablet, or desktop computer.
+</Info>
+
+## Adding Verses to Collections
+
+While reading, you can save verses to your personal collections:
+
+<Steps>
+  <Step title="Sign In">
+    Ensure you're signed in to your account to access collections.
+  </Step>
+  
+  <Step title="Select a Verse">
+    Click the add button next to any verse you want to save.
+  </Step>
+  
+  <Step title="Choose Collection">
+    Select which collection to add the verse to, or create a new collection.
+  </Step>
+</Steps>
+
+Learn more about organizing your saved verses in the [Collections](/features/collections) guide.
+
+## Taking Notes
+
+Enhance your Bible study by taking chapter-specific notes:
+
+- On **desktop**: Click "Open Notes" to reveal a side-by-side notes panel
+- On **mobile**: Use the notes sheet for a full-screen writing experience
+
+For detailed information about the notes feature, see the [Notes](/features/notes) documentation.

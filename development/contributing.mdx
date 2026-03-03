@@ -1,0 +1,377 @@
+---
+title: Contributing Guide
+description: Learn how to contribute to Your Bible project
+---
+
+## How to Contribute
+
+We welcome contributions from the community! Whether you're fixing bugs, adding new features, improving documentation, or suggesting enhancements, your help is appreciated.
+
+### Types of Contributions
+
+- **Bug Fixes**: Found a bug? Submit a fix!
+- **New Features**: Have an idea for a new feature? Let's discuss it!
+- **Documentation**: Help improve or translate documentation
+- **Code Quality**: Refactoring, performance improvements, or code cleanup
+- **Testing**: Add or improve test coverage
+
+## Getting Started
+
+<Steps>
+  <Step title="Fork the Repository">
+    Fork the Your Bible repository to your own GitHub account by clicking the "Fork" button on the main repository page.
+  </Step>
+
+  <Step title="Clone Your Fork">
+    ```bash
+    git clone https://github.com/YOUR_USERNAME/your-bible.git
+    cd your-bible
+    ```
+  </Step>
+
+  <Step title="Set Up Development Environment">
+    Follow the detailed instructions in the [Local Setup](/development/local-setup) guide to configure your development environment.
+  </Step>
+
+  <Step title="Add Upstream Remote">
+    ```bash
+    git remote add upstream https://github.com/ORIGINAL_OWNER/your-bible.git
+    ```
+    
+    This allows you to keep your fork synchronized with the main repository.
+  </Step>
+</Steps>
+
+## Branch Workflow
+
+### Creating a Feature Branch
+
+Always create a new branch for your work. Never commit directly to `main`.
+
+```bash
+git checkout -b feature/your-feature-name
+```
+
+### Branch Naming Conventions
+
+Use descriptive branch names that follow these patterns:
+
+- **Features**: `feature/add-verse-bookmarks`
+- **Bug Fixes**: `fix/search-pagination-error`
+- **Documentation**: `docs/update-api-reference`
+- **Refactoring**: `refactor/optimize-bible-query`
+- **Performance**: `perf/improve-search-speed`
+- **Tests**: `test/add-collection-tests`
+
+### Keeping Your Branch Updated
+
+Regularly sync your branch with the upstream repository:
+
+```bash
+# Fetch upstream changes
+git fetch upstream
+
+# Merge upstream main into your branch
+git merge upstream/main
+
+# Or rebase your changes on top of upstream main
+git rebase upstream/main
+```
+
+## Code Style and Conventions
+
+### TypeScript Guidelines
+
+- **Type Safety**: Always use proper TypeScript types. Avoid `any` unless absolutely necessary.
+- **Interfaces**: Prefer `type` over `interface` for consistency with the codebase.
+- **Exports**: Use named exports for components and utilities.
+
+```typescript
+// Good
+export type BibleVerse = {
+  id: string;
+  text: string;
+  reference: string;
+};
+
+// Avoid
+export interface BibleVerse {
+  id: string;
+  text: string;
+  reference: string;
+}
+```
+
+### React Component Guidelines
+
+<Accordion title="Component Structure">
+  ```typescript
+  // 1. Imports (external, then internal)
+  import { useState } from 'react';
+  import { Button } from '@/components/ui/button';
+
+  // 2. Types/Interfaces
+  type VerseCardProps = {
+    verse: string;
+    reference: string;
+    onSave?: () => void;
+  };
+
+  // 3. Component
+  export function VerseCard({ verse, reference, onSave }: VerseCardProps) {
+    // Hooks first
+    const [saved, setSaved] = useState(false);
+
+    // Event handlers
+    const handleSave = () => {
+      setSaved(true);
+      onSave?.();
+    };
+
+    // Render
+    return (
+      <div className="verse-card">
+        <p>{verse}</p>
+        <span>{reference}</span>
+        <Button onClick={handleSave}>Save</Button>
+      </div>
+    );
+  }
+  ```
+</Accordion>
+
+<Accordion title="Naming Conventions">
+  - **Components**: PascalCase (e.g., `VerseCard`, `BibleReader`)
+  - **Files**: kebab-case for component files (e.g., `verse-card.tsx`)
+  - **Hooks**: camelCase with `use` prefix (e.g., `useBibleData`)
+  - **Constants**: UPPER_SNAKE_CASE (e.g., `API_BASE_URL`)
+  - **Functions**: camelCase (e.g., `fetchVerses`)
+</Accordion>
+
+<Accordion title="Component Organization">
+  - Place reusable UI components in `src/components/ui/`
+  - Feature-specific components go in their respective directories:
+    - Bible components: `src/components/bible/`
+    - Collection components: `src/components/collections/`
+    - Story components: `src/components/stories/`
+    - Search components: `src/components/search/`
+</Accordion>
+
+### Styling Guidelines
+
+- **Tailwind CSS**: Use Tailwind utility classes for styling
+- **Component Variants**: Use `class-variance-authority` (CVA) for component variants
+- **Responsive Design**: Always consider mobile-first design
+
+```typescript
+import { cn } from '@/lib/utils';
+
+// Good - using cn for conditional classes
+<div className={cn(
+  "base-classes",
+  isActive && "active-classes",
+  className
+)} />
+```
+
+### Code Formatting
+
+- **Indentation**: 2 spaces (no tabs)
+- **Quotes**: Single quotes for strings, except in JSX
+- **Semicolons**: Use semicolons
+- **Line Length**: Aim for 80-100 characters per line
+
+## Testing Requirements
+
+### Before Submitting
+
+<Accordion title="Manual Testing Checklist">
+  - Test your changes in development mode (`pnpm dev`)
+  - Test the production build (`pnpm build`)
+  - Verify functionality works on both desktop and mobile viewports
+  - Test with different Bible translations if applicable
+  - Check console for errors or warnings
+  - Test authentication flows if your changes affect auth
+</Accordion>
+
+<Accordion title="Feature-Specific Testing">
+  **For Bible Reading Features:**
+  - Test chapter navigation (previous/next)
+  - Verify verse highlighting works correctly
+  - Test with different Bible translations
+
+  **For Collection Features:**
+  - Test creating, editing, and deleting collections
+  - Verify verse adding/removal works
+  - Check that only the user's collections are visible
+
+  **For Story Generation:**
+  - Test story creation with various parameters
+  - Verify rate limiting works (5 stories per day)
+  - Check story display and deletion
+
+  **For Search:**
+  - Test search with various keywords
+  - Verify pagination works correctly
+  - Test search across different Bible translations
+</Accordion>
+
+## Commit Guidelines
+
+### Commit Messages
+
+Write clear, descriptive commit messages:
+
+```bash
+# Good commit messages
+git commit -m "Add verse highlighting feature to Bible reader"
+git commit -m "Fix pagination bug in search results"
+git commit -m "Refactor collection API for better performance"
+
+# Avoid
+git commit -m "fix bug"
+git commit -m "update code"
+git commit -m "changes"
+```
+
+### Commit Message Format
+
+```
+<type>: <subject>
+
+<body (optional)>
+
+<footer (optional)>
+```
+
+**Types:**
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `style`: Code style changes (formatting, no logic change)
+- `refactor`: Code refactoring
+- `perf`: Performance improvements
+- `test`: Adding or updating tests
+- `chore`: Maintenance tasks
+
+**Example:**
+
+```
+feat: add export functionality to collections
+
+Users can now export their collections as JSON or CSV files.
+Added export button to collection detail page with format selector.
+
+Closes #123
+```
+
+## Pull Request Process
+
+<Steps>
+  <Step title="Update Your Branch">
+    Ensure your branch is up to date with the main repository:
+    
+    ```bash
+    git fetch upstream
+    git rebase upstream/main
+    ```
+  </Step>
+
+  <Step title="Push Your Changes">
+    ```bash
+    git push origin feature/your-feature-name
+    ```
+  </Step>
+
+  <Step title="Create Pull Request">
+    1. Go to your fork on GitHub
+    2. Click "Compare & pull request"
+    3. Fill out the PR template with:
+       - Clear description of changes
+       - Screenshots (if UI changes)
+       - Testing steps
+       - Related issues
+  </Step>
+
+  <Step title="Address Review Feedback">
+    - Respond to reviewer comments
+    - Make requested changes
+    - Push updates to the same branch
+    - Re-request review when ready
+  </Step>
+</Steps>
+
+### Pull Request Template
+
+Your PR description should include:
+
+```markdown
+## Description
+[Brief description of what this PR does]
+
+## Type of Change
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Breaking change
+- [ ] Documentation update
+
+## Changes Made
+- [List of specific changes]
+
+## Testing
+- [ ] Tested in development
+- [ ] Tested production build
+- [ ] Tested on mobile devices
+- [ ] No console errors
+
+## Screenshots (if applicable)
+[Add screenshots for UI changes]
+
+## Related Issues
+Closes #[issue number]
+```
+
+## Code Review Process
+
+### What to Expect
+
+- Reviews typically happen within 2-3 business days
+- Reviewers will check code quality, functionality, and alignment with project goals
+- Be open to feedback and suggestions
+- Multiple review rounds may be necessary
+
+### Review Checklist
+
+Reviewers will look for:
+
+- Code follows project conventions and style guide
+- TypeScript types are properly used
+- No unnecessary dependencies added
+- Components are properly organized
+- Changes are well-documented
+- No breaking changes without discussion
+- Performance considerations addressed
+
+## Getting Help
+
+### Resources
+
+- **Documentation**: Check the [docs](/introduction) for guides and references
+- **Issues**: Browse [existing issues](https://github.com/ORIGINAL_OWNER/your-bible/issues) for similar problems
+- **Discussions**: Join community discussions for questions and ideas
+
+### Asking Questions
+
+When asking for help:
+
+1. Check existing documentation first
+2. Search for similar issues or questions
+3. Provide context: what you're trying to do, what you've tried, what's not working
+4. Include error messages and relevant code snippets
+5. Share your environment details (OS, Node version, etc.)
+
+## License
+
+By contributing to Your Bible, you agree that your contributions will be licensed under the ISC License.
+
+Thank you for contributing to Your Bible! Your efforts help make Bible study more accessible and engaging for everyone.

@@ -1,0 +1,290 @@
+---
+title: 'Collections'
+description: 'Manage Bible verse collections'
+---
+
+## get
+
+Retrieve all collections for a specific user.
+
+<ParamField path="userId" type="string" required>
+  The unique identifier of the user whose collections to retrieve
+</ParamField>
+
+<ResponseField name="collections" type="array">
+  Array of collection objects belonging to the user
+  <Expandable title="Collection Object">
+    <ResponseField name="_id" type="Id<'collections'>">
+      Unique collection identifier
+    </ResponseField>
+    <ResponseField name="name" type="string">
+      Collection name
+    </ResponseField>
+    <ResponseField name="userId" type="string">
+      User who owns the collection
+    </ResponseField>
+    <ResponseField name="_creationTime" type="number">
+      Timestamp when collection was created
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+```typescript
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+
+function MyCollections() {
+  const collections = useQuery(api.collections.get, { 
+    userId: "user_123" 
+  });
+
+  return (
+    <div>
+      {collections?.map((collection) => (
+        <div key={collection._id}>{collection.name}</div>
+      ))}
+    </div>
+  );
+}
+```
+
+---
+
+## getCollection
+
+Retrieve a single collection with all its verses.
+
+<ParamField path="id" type="Id<'collections'>" required>
+  The unique identifier of the collection to retrieve
+</ParamField>
+
+<ParamField path="userId" type="string" required>
+  The user ID requesting access to verify ownership
+</ParamField>
+
+<ResponseField name="response" type="object">
+  <Expandable title="Response Object">
+    <ResponseField name="collection" type="object">
+      The collection details
+      <Expandable title="Collection Fields">
+        <ResponseField name="_id" type="Id<'collections'>">
+          Unique collection identifier
+        </ResponseField>
+        <ResponseField name="name" type="string">
+          Collection name
+        </ResponseField>
+        <ResponseField name="userId" type="string">
+          User who owns the collection
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+    <ResponseField name="verses" type="array">
+      Array of verses in the collection
+      <Expandable title="Verse Object">
+        <ResponseField name="_id" type="Id<'collectionVerses'>">
+          Unique verse collection entry identifier
+        </ResponseField>
+        <ResponseField name="verseId" type="string">
+          Bible verse identifier
+        </ResponseField>
+        <ResponseField name="verseText" type="string">
+          The text content of the verse
+        </ResponseField>
+        <ResponseField name="chapterId" type="string">
+          Chapter identifier
+        </ResponseField>
+        <ResponseField name="bibleId" type="string">
+          Bible translation identifier
+        </ResponseField>
+        <ResponseField name="collectionId" type="Id<'collections'>">
+          Reference to parent collection
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<Note>
+  This function validates that the requesting user owns the collection before returning data.
+</Note>
+
+```typescript
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
+
+function CollectionDetail({ collectionId }: { collectionId: Id<"collections"> }) {
+  const data = useQuery(api.collections.getCollection, {
+    id: collectionId,
+    userId: "user_123"
+  });
+
+  if (!data) return <div>Loading...</div>;
+
+  return (
+    <div>
+      <h2>{data.collection.name}</h2>
+      <div>
+        {data.verses.map((verse) => (
+          <p key={verse._id}>{verse.verseText}</p>
+        ))}
+      </div>
+    </div>
+  );
+}
+```
+
+---
+
+## createCollection
+
+Create a new verse collection.
+
+<ParamField path="name" type="string" required>
+  The name for the new collection
+</ParamField>
+
+<ParamField path="userId" type="string" required>
+  The unique identifier of the user creating the collection
+</ParamField>
+
+<ResponseField name="collectionId" type="Id<'collections'>">
+  The unique identifier of the newly created collection
+</ResponseField>
+
+```typescript
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useState } from "react";
+
+function CreateCollection() {
+  const [name, setName] = useState("");
+  const createCollection = useMutation(api.collections.createCollection);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const collectionId = await createCollection({
+      name,
+      userId: "user_123"
+    });
+    console.log("Created collection:", collectionId);
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input 
+        value={name} 
+        onChange={(e) => setName(e.target.value)}
+        placeholder="Collection name"
+      />
+      <button type="submit">Create</button>
+    </form>
+  );
+}
+```
+
+---
+
+## updateCollection
+
+Update an existing collection's name.
+
+<ParamField path="id" type="Id<'collections'>" required>
+  The unique identifier of the collection to update
+</ParamField>
+
+<ParamField path="name" type="string" required>
+  The new name for the collection
+</ParamField>
+
+<ParamField path="userId" type="string" required>
+  The user ID requesting the update to verify ownership
+</ParamField>
+
+<ResponseField name="response" type="null">
+  Returns null on successful update
+</ResponseField>
+
+<Note>
+  This function validates that the requesting user owns the collection before allowing the update.
+</Note>
+
+```typescript
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
+
+function RenameCollection({ 
+  collectionId, 
+  currentName 
+}: { 
+  collectionId: Id<"collections">;
+  currentName: string;
+}) {
+  const updateCollection = useMutation(api.collections.updateCollection);
+  const [name, setName] = useState(currentName);
+
+  const handleUpdate = async () => {
+    await updateCollection({
+      id: collectionId,
+      name,
+      userId: "user_123"
+    });
+  };
+
+  return (
+    <div>
+      <input value={name} onChange={(e) => setName(e.target.value)} />
+      <button onClick={handleUpdate}>Save</button>
+    </div>
+  );
+}
+```
+
+---
+
+## deleteCollection
+
+Delete a collection and all its contents.
+
+<ParamField path="id" type="Id<'collections'>" required>
+  The unique identifier of the collection to delete
+</ParamField>
+
+<ParamField path="userId" type="string" required>
+  The user ID requesting the deletion to verify ownership
+</ParamField>
+
+<ResponseField name="response" type="null">
+  Returns null on successful deletion
+</ResponseField>
+
+<Note>
+  This function validates that the requesting user owns the collection before allowing deletion.
+  Note that deleting a collection does not automatically delete associated verses from the `collectionVerses` table.
+</Note>
+
+```typescript
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
+
+function DeleteCollectionButton({ 
+  collectionId 
+}: { 
+  collectionId: Id<"collections">;
+}) {
+  const deleteCollection = useMutation(api.collections.deleteCollection);
+
+  const handleDelete = async () => {
+    if (confirm("Are you sure you want to delete this collection?")) {
+      await deleteCollection({
+        id: collectionId,
+        userId: "user_123"
+      });
+    }
+  };
+
+  return <button onClick={handleDelete}>Delete Collection</button>;
+}
+```

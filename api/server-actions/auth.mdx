@@ -1,0 +1,357 @@
+---
+title: 'Authentication Server Actions'
+description: 'Server actions for managing user authentication and sessions'
+icon: 'shield-check'
+---
+
+## Overview
+
+The authentication server actions provide functions to manage user sessions and authentication state. These actions integrate with your authentication library to securely retrieve session information from server-side requests.
+
+All functions are created using TanStack Start's `createServerFn()` and execute on the server with access to request headers.
+
+## fetchSession
+
+Retrieves the current user's session information from the server.
+
+```typescript
+fetchSession(): Promise<Session | null>
+```
+
+### Returns
+
+<ResponseField name="Session" type="object | null">
+  Session object containing user information, or null if no active session exists
+  
+  <Expandable title="Session properties">
+    <ResponseField name="user" type="object" required>
+      User information object
+      
+      <Expandable title="User properties">
+        <ResponseField name="id" type="string" required>
+          Unique user identifier
+        </ResponseField>
+        
+        <ResponseField name="email" type="string" required>
+          User's email address
+        </ResponseField>
+        
+        <ResponseField name="name" type="string">
+          Optional user display name
+        </ResponseField>
+        
+        <ResponseField name="image" type="string">
+          Optional user profile image URL
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+    
+    <ResponseField name="session" type="object" required>
+      Session metadata
+      
+      <Expandable title="Session metadata properties">
+        <ResponseField name="token" type="string" required>
+          Session token
+        </ResponseField>
+        
+        <ResponseField name="expiresAt" type="Date" required>
+          Session expiration timestamp
+        </ResponseField>
+        
+        <ResponseField name="userId" type="string" required>
+          User ID associated with this session
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<Note>
+The exact shape of the `Session` object depends on your authentication library configuration. The structure shown above represents a typical session object from Better Auth or similar libraries.
+</Note>
+
+### Usage
+
+<CodeGroup>
+```typescript Client Component
+import { fetchSession } from '@/actions/auth'
+import { useEffect, useState } from 'react'
+
+export default function UserProfile() {
+  const [session, setSession] = useState<Session | null>(null)
+  const [loading, setLoading] = useState(true)
+  
+  useEffect(() => {
+    fetchSession()
+      .then(data => setSession(data))
+      .finally(() => setLoading(false))
+  }, [])
+  
+  if (loading) {
+    return <div>Loading...</div>
+  }
+  
+  if (!session) {
+    return (
+      <div>
+        <p>Not logged in</p>
+        <a href="/login">Sign in</a>
+      </div>
+    )
+  }
+  
+  return (
+    <div>
+      <h2>Welcome, {session.user.name || session.user.email}</h2>
+      {session.user.image && (
+        <img 
+          src={session.user.image} 
+          alt="Profile" 
+          width={40} 
+          height={40} 
+        />
+      )}
+      <p>Email: {session.user.email}</p>
+    </div>
+  )
+}
+```
+
+```typescript Server Component
+import { fetchSession } from '@/actions/auth'
+import { redirect } from '@tanstack/react-router'
+
+export default async function DashboardPage() {
+  const session = await fetchSession()
+  
+  if (!session) {
+    redirect({ to: '/login' })
+    return null
+  }
+  
+  return (
+    <main>
+      <h1>Dashboard</h1>
+      <p>Logged in as: {session.user.email}</p>
+      
+      {/* Protected content */}
+      <div>
+        <h2>Your Content</h2>
+        {/* ... */}
+      </div>
+    </main>
+  )
+}
+```
+
+```typescript Route Protection
+import { fetchSession } from '@/actions/auth'
+import { createFileRoute, redirect } from '@tanstack/react-router'
+
+export const Route = createFileRoute('/dashboard')
+  .beforeLoad(async () => {
+    const session = await fetchSession()
+    
+    if (!session) {
+      throw redirect({
+        to: '/login',
+        search: {
+          redirect: '/dashboard'
+        }
+      })
+    }
+    
+    return { session }
+  })
+```
+
+```typescript Custom Hook
+import { fetchSession } from '@/actions/auth'
+import { useEffect, useState } from 'react'
+
+export function useSession() {
+  const [session, setSession] = useState<Session | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
+  
+  const refetch = async () => {
+    try {
+      setLoading(true)
+      const data = await fetchSession()
+      setSession(data)
+      setError(null)
+    } catch (err) {
+      setError(err as Error)
+    } finally {
+      setLoading(false)
+    }
+  }
+  
+  useEffect(() => {
+    refetch()
+  }, [])
+  
+  return { 
+    session, 
+    loading, 
+    error, 
+    refetch,
+    isAuthenticated: !!session 
+  }
+}
+
+// Usage
+function MyComponent() {
+  const { session, loading, isAuthenticated } = useSession()
+  
+  if (loading) return <div>Loading...</div>
+  
+  return isAuthenticated ? (
+    <div>Welcome {session?.user.name}</div>
+  ) : (
+    <div>Please log in</div>
+  )
+}
+```
+</CodeGroup>
+
+### How It Works
+
+The `fetchSession` function:
+
+1. Extracts the request headers using `getWebRequest()` from TanStack Start
+2. Passes the headers to your auth library's `getSession()` method
+3. Returns the session object or `null` if no valid session exists
+
+```typescript
+export const fetchSession = createServerFn({ method: 'GET' }).handler(async () => {
+  const { headers } = getWebRequest()!
+
+  const session = await auth.api.getSession({
+    headers
+  })
+
+  return session
+})
+```
+
+### Authentication Flow
+
+<Steps>
+  <Step title="Client Request">
+    Client component calls `fetchSession()` to check authentication status
+  </Step>
+  
+  <Step title="Server Execution">
+    Function executes on the server with access to HTTP request headers
+  </Step>
+  
+  <Step title="Session Validation">
+    Auth library validates session token from cookies/headers
+  </Step>
+  
+  <Step title="Response">
+    Returns session object if valid, or `null` if unauthenticated
+  </Step>
+</Steps>
+
+### Error Handling
+
+The function returns `null` if:
+- No session token is present in the request
+- The session token is invalid or expired
+- The user has been deleted or deactivated
+- Any authentication error occurs
+
+<Warning>
+Always check for `null` before accessing session properties to avoid runtime errors.
+</Warning>
+
+### Security Considerations
+
+<AccordionGroup>
+  <Accordion title="Server-Side Only">
+    Session validation happens entirely on the server. Session tokens are never exposed to client-side JavaScript.
+  </Accordion>
+  
+  <Accordion title="Request Headers">
+    The function uses `getWebRequest()` to access the original HTTP request headers, ensuring cookies and authentication headers are properly forwarded.
+  </Accordion>
+  
+  <Accordion title="Token Validation">
+    Your auth library handles token validation, expiration checks, and CSRF protection automatically.
+  </Accordion>
+  
+  <Accordion title="Type Safety">
+    The function is strongly typed, providing autocomplete and type checking for session properties.
+  </Accordion>
+</AccordionGroup>
+
+### Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Cache Session Data" icon="database">
+    Consider caching the session in client state to avoid repeated server calls on the same page.
+  </Card>
+  
+  <Card title="Route Protection" icon="lock">
+    Use `fetchSession()` in route loaders or `beforeLoad` hooks to protect entire routes.
+  </Card>
+  
+  <Card title="Optimistic UI" icon="bolt">
+    Combine with context or state management for optimistic UI updates after authentication.
+  </Card>
+  
+  <Card title="Error Boundaries" icon="shield">
+    Wrap authentication-dependent components in error boundaries to handle unexpected failures gracefully.
+  </Card>
+</CardGroup>
+
+---
+
+## Integration with Auth Library
+
+This server action integrates with your authentication setup defined in `/src/lib/auth`. The exact behavior depends on your auth library configuration (e.g., Better Auth, NextAuth, Lucia, etc.).
+
+### Configuration
+
+Make sure your auth library is properly configured in `/home/daytona/workspace/source/src/lib/auth.ts:1` with:
+
+- Session management enabled
+- Cookie-based or header-based authentication
+- Proper secret keys and security settings
+
+### Example Auth Setup
+
+```typescript
+import { betterAuth } from "better-auth"
+import { db } from "./db"
+
+export const auth = betterAuth({
+  database: db,
+  session: {
+    expiresIn: 60 * 60 * 24 * 7, // 7 days
+    updateAge: 60 * 60 * 24, // 1 day
+  },
+  // Additional configuration...
+})
+```
+
+<Tip>
+Consult your authentication library's documentation for detailed configuration options and session management features.
+</Tip>
+
+---
+
+## Type Definitions
+
+The session type depends on your auth library. To get proper TypeScript support:
+
+```typescript
+import type { Session } from '@/lib/auth'
+
+// Or if using Better Auth
+import type { Session } from 'better-auth/types'
+```
+
+For complete authentication types and configuration, refer to your auth library's documentation and your `/home/daytona/workspace/source/src/lib/auth.ts:1` file.

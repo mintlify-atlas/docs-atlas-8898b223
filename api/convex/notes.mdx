@@ -1,0 +1,195 @@
+---
+title: 'Notes'
+description: 'Manage chapter notes and annotations'
+---
+
+## getNotes
+
+Retrieve the note for a specific chapter and user.
+
+<ParamField path="chapterId" type="string" required>
+  The unique identifier of the Bible chapter
+</ParamField>
+
+<ParamField path="userId" type="string" required>
+  The unique identifier of the user whose note to retrieve
+</ParamField>
+
+<ResponseField name="note" type="object | null">
+  The note object for the chapter, or null if no note exists
+  <Expandable title="Note Object">
+    <ResponseField name="_id" type="Id<'notes'>">
+      Unique note identifier
+    </ResponseField>
+    <ResponseField name="chapterId" type="string">
+      Chapter identifier the note belongs to
+    </ResponseField>
+    <ResponseField name="content" type="string">
+      The text content of the note
+    </ResponseField>
+    <ResponseField name="userId" type="string">
+      User who owns the note
+    </ResponseField>
+    <ResponseField name="_creationTime" type="number">
+      Timestamp when note was created
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<Note>
+  This function returns only the first note matching the chapter and user. Each user can have one note per chapter.
+</Note>
+
+```typescript
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+
+function ChapterNote({ chapterId }: { chapterId: string }) {
+  const note = useQuery(api.notes.getNotes, {
+    chapterId,
+    userId: "user_123"
+  });
+
+  if (!note) {
+    return <div>No note for this chapter yet.</div>;
+  }
+
+  return (
+    <div>
+      <h3>My Notes</h3>
+      <p>{note.content}</p>
+    </div>
+  );
+}
+```
+
+---
+
+## createNote
+
+Create a new note for a Bible chapter.
+
+<ParamField path="chapterId" type="string" required>
+  The unique identifier of the Bible chapter
+</ParamField>
+
+<ParamField path="content" type="string" required>
+  The text content of the note
+</ParamField>
+
+<ParamField path="userId" type="string" required>
+  The unique identifier of the user creating the note
+</ParamField>
+
+<ResponseField name="noteId" type="Id<'notes'>">
+  The unique identifier of the newly created note
+</ResponseField>
+
+```typescript
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useState } from "react";
+
+function CreateNote({ chapterId }: { chapterId: string }) {
+  const [content, setContent] = useState("");
+  const createNote = useMutation(api.notes.createNote);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const noteId = await createNote({
+      chapterId,
+      content,
+      userId: "user_123"
+    });
+    console.log("Created note:", noteId);
+    setContent("");
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <textarea
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        placeholder="Write your notes about this chapter..."
+        rows={4}
+      />
+      <button type="submit">Save Note</button>
+    </form>
+  );
+}
+```
+
+---
+
+## updateNote
+
+Update an existing note's content.
+
+<ParamField path="id" type="Id<'notes'>" required>
+  The unique identifier of the note to update
+</ParamField>
+
+<ParamField path="content" type="string" required>
+  The new text content for the note
+</ParamField>
+
+<ParamField path="userId" type="string" required>
+  The user ID requesting the update to verify ownership
+</ParamField>
+
+<ResponseField name="response" type="null">
+  Returns null on successful update
+</ResponseField>
+
+<Note>
+  This function validates that the requesting user owns the note before allowing the update.
+</Note>
+
+```typescript
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
+import { useState } from "react";
+
+function EditNote({ 
+  noteId, 
+  initialContent 
+}: { 
+  noteId: Id<"notes">;
+  initialContent: string;
+}) {
+  const [content, setContent] = useState(initialContent);
+  const updateNote = useMutation(api.notes.updateNote);
+  const [saving, setSaving] = useState(false);
+
+  const handleUpdate = async () => {
+    setSaving(true);
+    try {
+      await updateNote({
+        id: noteId,
+        content,
+        userId: "user_123"
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div>
+      <textarea
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        rows={4}
+      />
+      <button onClick={handleUpdate} disabled={saving}>
+        {saving ? "Saving..." : "Update Note"}
+      </button>
+    </div>
+  );
+}
+```
+
+<Note>
+  Consider implementing auto-save functionality with debouncing to improve user experience when editing notes.
+</Note>

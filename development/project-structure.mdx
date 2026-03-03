@@ -1,0 +1,600 @@
+---
+title: Project Structure
+description: Detailed breakdown of Your Bible's project structure and organization
+---
+
+## Overview
+
+Your Bible is built with TanStack Start, a full-stack React framework. The project follows a modular structure with clear separation of concerns.
+
+```
+your-bible/
+├── convex/              # Convex backend configuration
+├── src/                 # Source code
+├── public/              # Static assets
+├── .env.example         # Environment variable template
+├── package.json         # Dependencies and scripts
+├── tsconfig.json        # TypeScript configuration
+├── vite.config.ts       # Vite build configuration
+└── drizzle.config.ts    # Drizzle ORM configuration
+```
+
+## Root Directory Files
+
+<ParamField path="package.json" type="file">
+  Project metadata, dependencies, and npm scripts.
+  
+  **Key Dependencies:**
+  - `@tanstack/react-start` - Full-stack React framework
+  - `convex` - Real-time backend and database
+  - `better-auth` - Authentication solution
+  - `drizzle-orm` - Type-safe database queries
+  - `@google/genai` - Google Gemini AI integration
+  - `platejs` - Rich text editor
+  - `tailwindcss` - Utility-first CSS framework
+</ParamField>
+
+<ParamField path="tsconfig.json" type="file">
+  TypeScript compiler configuration with path aliases:
+  - `@/*` → `./src/*`
+  - Strict type checking enabled
+  - React 19 JSX transform
+</ParamField>
+
+<ParamField path="vite.config.ts" type="file">
+  Vite build configuration:
+  - TanStack Start plugin
+  - Path resolution
+  - Development server settings
+  - Build optimizations
+</ParamField>
+
+<ParamField path="drizzle.config.ts" type="file">
+  Drizzle ORM configuration:
+  - Database connection
+  - Migration settings
+  - Schema location
+</ParamField>
+
+<ParamField path=".env.example" type="file">
+  Template for environment variables. Copy to `.env` and fill in your values.
+  See [Environment Variables](/development/environment-variables) for details.
+</ParamField>
+
+## Source Directory (`src/`)
+
+### Main Entry Points
+
+```
+src/
+├── app.tsx              # Root application component
+├── routes.ts            # Route configuration
+└── router.tsx           # Router setup
+```
+
+<ParamField path="app.tsx" type="file">
+  The root React component that:
+  - Sets up providers (Query, Convex, Theme)
+  - Configures global layout
+  - Initializes authentication
+  - Includes Toast notifications
+</ParamField>
+
+## Core Directories
+
+### Actions (`src/actions/`)
+
+<Info>
+  TanStack Start server actions - backend functions that run on the server.
+</Info>
+
+```
+actions/
+├── bible.ts             # Bible API interactions
+├── collections.ts       # Collection CRUD operations
+├── stories.ts           # Story generation and management
+└── auth.ts              # Authentication actions
+```
+
+**Purpose:** Server-side functions for:
+- Fetching data from external APIs
+- Rate limiting
+- Authentication checks
+- Data validation
+
+**Example:** `bible.ts:10` - Fetches chapter content from API.Bible
+
+### Components (`src/components/`)
+
+```
+components/
+├── bible/               # Bible-specific components
+│   ├── bible-reader.tsx
+│   ├── chapter-navigation.tsx
+│   ├── verse-card.tsx
+│   └── translation-selector.tsx
+├── collections/         # Collection management
+│   ├── collection-list.tsx
+│   ├── collection-card.tsx
+│   ├── add-verse-dialog.tsx
+│   └── verse-manager.tsx
+├── stories/             # Story-related components
+│   ├── story-list.tsx
+│   ├── story-card.tsx
+│   ├── story-generator-form.tsx
+│   └── story-viewer.tsx
+├── search/              # Search functionality
+│   ├── search-bar.tsx
+│   ├── search-results.tsx
+│   └── search-pagination.tsx
+├── forms/               # Form components
+│   ├── sign-in-form.tsx
+│   └── sign-up-form.tsx
+├── ui/                  # Reusable UI components (shadcn/ui)
+│   ├── button.tsx
+│   ├── dialog.tsx
+│   ├── select.tsx
+│   ├── input.tsx
+│   └── ...
+├── skeletons/           # Loading skeleton components
+│   ├── bible-skeleton.tsx
+│   ├── collection-skeleton.tsx
+│   └── story-skeleton.tsx
+├── tabs/                # Tab components
+└── profile/             # User profile components
+```
+
+<Accordion title="Component Organization Guidelines">
+  **Feature Components** (`bible/`, `collections/`, `stories/`, `search/`):
+  - Domain-specific components
+  - Can import from `ui/` but not from other feature directories
+  - May have local state and business logic
+
+  **UI Components** (`ui/`):
+  - Generic, reusable components
+  - Based on shadcn/ui
+  - No business logic
+  - Fully typed with TypeScript
+  - Can be used across all features
+
+  **Skeleton Components** (`skeletons/`):
+  - Loading state placeholders
+  - Match the layout of actual content
+  - Improve perceived performance
+</Accordion>
+
+### Routes (`src/routes/`)
+
+<Info>
+  TanStack Router uses file-based routing. Each file becomes a route.
+</Info>
+
+```
+routes/
+├── __root.tsx           # Root layout
+├── index.tsx            # Home page (/)
+├── bible/
+│   └── $bibleId.$chapterId.tsx  # Bible reader (/bible/:bibleId/:chapterId)
+├── search.tsx           # Search page (/search)
+├── _authed/             # Protected routes (require auth)
+│   ├── collections/
+│   │   ├── index.tsx    # Collections list
+│   │   └── $id.tsx      # Collection detail
+│   └── stories/
+│       ├── index.tsx    # Stories list
+│       ├── new.tsx      # Create story
+│       └── $id.tsx      # Story detail
+└── api/
+    └── auth/            # Auth API routes
+        └── $.tsx        # Better Auth catch-all
+```
+
+<Accordion title="Route Naming Conventions">
+  - **Static routes**: `about.tsx` → `/about`
+  - **Dynamic routes**: `$id.tsx` → `/:id`
+  - **Nested routes**: `blog/$slug.tsx` → `/blog/:slug`
+  - **Layout routes**: `_layout.tsx` → No URL segment, provides layout
+  - **Protected routes**: `_authed/` prefix requires authentication
+  - **Catch-all routes**: `$.tsx` → Matches any remaining path
+</Accordion>
+
+### Hooks (`src/hooks/`)
+
+```
+hooks/
+├── use-bible.ts         # Bible data fetching
+├── use-user.ts          # Current user data
+├── use-collections.ts   # Collection operations
+├── use-stories.ts       # Story operations
+└── use-debounce.ts      # Utility hooks
+```
+
+**Purpose:** Custom React hooks for:
+- Data fetching with TanStack Query
+- Convex real-time subscriptions
+- Shared stateful logic
+- Side effects
+
+**Example:**
+```typescript
+// hooks/use-bible.ts
+export function useBibleChapter(bibleId: string, chapterId: string) {
+  return useQuery({
+    queryKey: ['bible', bibleId, chapterId],
+    queryFn: () => fetchChapter(bibleId, chapterId),
+  });
+}
+```
+
+### Library (`src/lib/`)
+
+```
+lib/
+├── utils.ts             # Utility functions (cn, etc.)
+├── axios.ts             # API.Bible HTTP client
+├── auth.ts              # Better Auth server configuration
+├── auth-client.ts       # Better Auth client
+├── convex.ts            # Convex utility functions
+├── gemini.ts            # Google Gemini AI client
+├── redis.ts             # Redis/Upstash rate limiting
+├── constants.ts         # App constants
+└── uploadthing.ts       # UploadThing configuration
+```
+
+<AccordionGroup>
+  <Accordion title="utils.ts">
+    Common utility functions:
+    - `cn()` - Tailwind class name merger using `clsx` and `tailwind-merge`
+    - Date formatting helpers
+    - String manipulation
+  </Accordion>
+
+  <Accordion title="axios.ts">
+    Pre-configured Axios instance for API.Bible:
+    - Base URL set to `https://api.scripture.api.bible/v1`
+    - API key authentication header
+    - Request/response interceptors
+  </Accordion>
+
+  <Accordion title="auth.ts">
+    Better Auth server configuration:
+    - Drizzle adapter for PostgreSQL
+    - Email/password authentication
+    - GitHub OAuth provider
+    - Session management
+  </Accordion>
+
+  <Accordion title="gemini.ts">
+    Google Gemini AI client:
+    - Model: `gemini-1.5-flash`
+    - API key configuration
+    - Error handling
+  </Accordion>
+
+  <Accordion title="redis.ts">
+    Upstash Redis rate limiting:
+    - Fixed window: 5 requests per 24 hours
+    - Used for story generation
+    - Analytics enabled
+  </Accordion>
+</AccordionGroup>
+
+### Queries (`src/queries/`)
+
+```
+queries/
+├── bible-queries.ts     # TanStack Query configurations for Bible API
+├── collection-queries.ts
+└── story-queries.ts
+```
+
+**Purpose:** Centralized query configurations for TanStack Query:
+- Query keys
+- Query functions
+- Caching strategies
+- Refetch policies
+
+### Schemas (`src/schemas/`)
+
+```
+schemas/
+├── auth-schema.ts       # Auth form validation
+├── collection-schema.ts # Collection validation
+└── story-schema.ts      # Story generation validation
+```
+
+**Purpose:** Zod schemas for:
+- Form validation
+- API request/response validation
+- Type inference
+
+**Example:**
+```typescript
+import { z } from 'zod';
+
+export const createCollectionSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(100),
+});
+
+export type CreateCollectionInput = z.infer<typeof createCollectionSchema>;
+```
+
+### Server (`src/server/`)
+
+```
+server/
+└── api/                 # API route handlers
+    └── bible.ts
+```
+
+**Purpose:** Server-side API handlers and middleware.
+
+### Types (`src/types/`)
+
+```
+types/
+├── bible.ts             # Bible API types
+├── collection.ts        # Collection types
+├── story.ts             # Story types
+└── user.ts              # User types
+```
+
+**Purpose:** TypeScript type definitions:
+- API response types
+- Domain models
+- Utility types
+- Type guards
+
+### Styles (`src/styles/`)
+
+```
+styles/
+└── globals.css          # Global styles and Tailwind imports
+```
+
+### Database (`src/db/`)
+
+```
+db/
+├── index.ts             # Database connection
+└── schema.ts            # Drizzle schema definitions
+```
+
+**Purpose:** Database configuration for Better Auth's PostgreSQL storage.
+
+## Convex Directory
+
+```
+convex/
+├── schema.ts            # Convex database schema
+├── collections.ts       # Collection mutations/queries
+├── collectionVerses.ts  # Verse operations
+├── notes.ts             # Note operations
+├── stories.ts           # Story operations
+└── _generated/          # Auto-generated TypeScript types
+```
+
+<Info>
+  Convex automatically generates TypeScript types from your schema.
+</Info>
+
+**Key Files:**
+
+<ParamField path="schema.ts" type="file">
+  Defines database tables and indexes:
+  - `collections` - User verse collections
+  - `collectionVerses` - Verses within collections
+  - `notes` - Chapter notes
+  - `stories` - AI-generated stories
+  
+  See [Database Schema](/development/database-schema) for details.
+</ParamField>
+
+<ParamField path="collections.ts" type="file">
+  Convex functions for collection operations:
+  - `create` - Create new collection
+  - `update` - Update collection name
+  - `delete` - Delete collection
+  - `list` - Get user's collections
+  - `get` - Get single collection
+</ParamField>
+
+## File Naming Conventions
+
+<CardGroup cols={2}>
+  <Card title="Components">
+    - PascalCase for component files: `BibleReader.tsx`
+    - Or kebab-case: `bible-reader.tsx`
+    - Export component with same name as file
+  </Card>
+  
+  <Card title="Utilities">
+    - kebab-case: `use-bible.ts`
+    - camelCase for hook files: `useBible.ts`
+    - Descriptive names
+  </Card>
+  
+  <Card title="Routes">
+    - kebab-case: `search.tsx`
+    - `$` prefix for params: `$id.tsx`
+    - `_` prefix for layout routes: `_layout.tsx`
+  </Card>
+  
+  <Card title="Types">
+    - kebab-case: `bible-types.ts`
+    - Or domain-based: `bible.ts` in `types/`
+    - Export types, not default exports
+  </Card>
+</CardGroup>
+
+## Where to Add New Features
+
+<Steps>
+  <Step title="Identify Feature Category">
+    Determine where your feature belongs:
+    - **Bible reading** → `src/components/bible/`
+    - **Collections** → `src/components/collections/`
+    - **Stories** → `src/components/stories/`
+    - **Search** → `src/components/search/`
+    - **New category** → Create new directory in `src/components/`
+  </Step>
+
+  <Step title="Create Components">
+    Add your React components:
+    ```
+    src/components/your-feature/
+    ├── your-feature.tsx      # Main component
+    ├── feature-card.tsx      # Sub-components
+    └── feature-dialog.tsx
+    ```
+  </Step>
+
+  <Step title="Add Types">
+    Define TypeScript types:
+    ```typescript
+    // src/types/your-feature.ts
+    export type YourFeature = {
+      id: string;
+      name: string;
+      // ...
+    };
+    ```
+  </Step>
+
+  <Step title="Create Schemas">
+    Add Zod validation schemas:
+    ```typescript
+    // src/schemas/your-feature-schema.ts
+    import { z } from 'zod';
+    
+    export const yourFeatureSchema = z.object({
+      name: z.string().min(1),
+    });
+    ```
+  </Step>
+
+  <Step title="Add Server Actions">
+    If your feature needs backend logic:
+    ```typescript
+    // src/actions/your-feature.ts
+    'use server';
+    
+    export async function yourFeatureAction(data: FormData) {
+      // Server-side logic
+    }
+    ```
+  </Step>
+
+  <Step title="Create Routes">
+    Add pages for your feature:
+    ```
+    src/routes/your-feature/
+    ├── index.tsx            # List view
+    └── $id.tsx              # Detail view
+    ```
+  </Step>
+
+  <Step title="Add Convex Functions (if needed)">
+    For real-time data:
+    ```typescript
+    // convex/yourFeature.ts
+    import { mutation, query } from './_generated/server';
+    
+    export const create = mutation({
+      // ...
+    });
+    ```
+  </Step>
+
+  <Step title="Create Custom Hooks">
+    For data fetching and shared logic:
+    ```typescript
+    // src/hooks/use-your-feature.ts
+    export function useYourFeature() {
+      // Hook logic
+    }
+    ```
+  </Step>
+</Steps>
+
+## Import Aliases
+
+The project uses path aliases configured in `tsconfig.json`:
+
+```typescript
+// Instead of:
+import { Button } from '../../../components/ui/button';
+
+// Use:
+import { Button } from '@/components/ui/button';
+```
+
+**Available Aliases:**
+- `@/components` → `src/components`
+- `@/lib` → `src/lib`
+- `@/hooks` → `src/hooks`
+- `@/types` → `src/types`
+- `@/actions` → `src/actions`
+- `@/schemas` → `src/schemas`
+
+## Code Organization Best Practices
+
+<AccordionGroup>
+  <Accordion title="Keep Components Small">
+    - Single Responsibility Principle
+    - Extract complex logic into hooks
+    - Break large components into smaller ones
+    - Maximum ~200 lines per component
+  </Accordion>
+
+  <Accordion title="Co-locate Related Files">
+    Keep related files together:
+    ```
+    features/
+    └── collections/
+        ├── collection-card.tsx
+        ├── collection-dialog.tsx
+        ├── use-collection.ts
+        └── collection-types.ts
+    ```
+  </Accordion>
+
+  <Accordion title="Separate Business Logic">
+    - Components for UI
+    - Hooks for data and state
+    - Actions for server operations
+    - Utils for pure functions
+  </Accordion>
+
+  <Accordion title="Use Barrel Exports">
+    Create `index.ts` files for cleaner imports:
+    ```typescript
+    // components/collections/index.ts
+    export { CollectionCard } from './collection-card';
+    export { CollectionDialog } from './collection-dialog';
+    
+    // Usage
+    import { CollectionCard, CollectionDialog } from '@/components/collections';
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Additional Resources
+
+<CardGroup cols={2}>
+  <Card title="Environment Variables" icon="key" href="/development/environment-variables">
+    Complete reference for all environment variables
+  </Card>
+  
+  <Card title="Database Schema" icon="database" href="/development/database-schema">
+    Convex schema documentation
+  </Card>
+  
+  <Card title="Integrations" icon="plug" href="/development/integrations">
+    External API and service integrations
+  </Card>
+  
+  <Card title="Contributing Guide" icon="code-pull-request" href="/development/contributing">
+    How to contribute to the project
+  </Card>
+</CardGroup>

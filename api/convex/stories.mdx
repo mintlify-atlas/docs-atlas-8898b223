@@ -1,0 +1,322 @@
+---
+title: 'Stories'
+description: 'Manage AI-generated Bible story retellings'
+---
+
+## createStory
+
+Create a new AI-generated story based on a Bible chapter.
+
+<ParamField path="bibleId" type="string" required>
+  The Bible translation identifier (e.g., "KJV", "NIV")
+</ParamField>
+
+<ParamField path="story" type="string" required>
+  The AI-generated story content
+</ParamField>
+
+<ParamField path="chapterId" type="string" required>
+  The unique identifier of the Bible chapter this story is based on
+</ParamField>
+
+<ParamField path="chapterReference" type="string" required>
+  Human-readable chapter reference (e.g., "Genesis 1", "John 3")
+</ParamField>
+
+<ParamField path="userId" type="string" required>
+  The unique identifier of the user creating the story
+</ParamField>
+
+<ParamField path="perspective" type="string" required>
+  The narrative perspective used in the story (e.g., "first-person", "third-person")
+</ParamField>
+
+<ParamField path="setting" type="string" required>
+  The setting or context for the story retelling
+</ParamField>
+
+<ParamField path="tone" type="string" required>
+  The tone of the story (e.g., "dramatic", "conversational", "poetic")
+</ParamField>
+
+<ParamField path="storyLength" type="string" required>
+  The target length of the story (e.g., "short", "medium", "long")
+</ParamField>
+
+<ParamField path="title" type="string" required>
+  The title of the story
+</ParamField>
+
+<ResponseField name="storyId" type="Id<'stories'>">
+  The unique identifier of the newly created story
+</ResponseField>
+
+```typescript
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+
+function GenerateStory({ chapterId }: { chapterId: string }) {
+  const createStory = useMutation(api.stories.createStory);
+  const [generating, setGenerating] = useState(false);
+
+  const handleGenerate = async () => {
+    setGenerating(true);
+    try {
+      // Generate story content with your AI service
+      const generatedContent = await generateStoryWithAI({
+        chapterId,
+        perspective: "first-person",
+        setting: "modern day",
+        tone: "conversational",
+        storyLength: "medium"
+      });
+
+      const storyId = await createStory({
+        bibleId: "NIV",
+        story: generatedContent.text,
+        chapterId,
+        chapterReference: "Genesis 1",
+        userId: "user_123",
+        perspective: "first-person",
+        setting: "modern day",
+        tone: "conversational",
+        storyLength: "medium",
+        title: generatedContent.title
+      });
+
+      console.log("Created story:", storyId);
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  return (
+    <button onClick={handleGenerate} disabled={generating}>
+      {generating ? "Generating..." : "Generate Story"}
+    </button>
+  );
+}
+```
+
+---
+
+## getStories
+
+Retrieve all stories created by a specific user.
+
+<ParamField path="userId" type="string" required>
+  The unique identifier of the user whose stories to retrieve
+</ParamField>
+
+<ResponseField name="stories" type="array">
+  Array of story objects belonging to the user
+  <Expandable title="Story Object">
+    <ResponseField name="_id" type="Id<'stories'>">
+      Unique story identifier
+    </ResponseField>
+    <ResponseField name="title" type="string">
+      Story title
+    </ResponseField>
+    <ResponseField name="bibleId" type="string">
+      Bible translation identifier
+    </ResponseField>
+    <ResponseField name="chapterId" type="string">
+      Chapter identifier
+    </ResponseField>
+    <ResponseField name="chapterReference" type="string">
+      Human-readable chapter reference
+    </ResponseField>
+    <ResponseField name="userId" type="string">
+      User who created the story
+    </ResponseField>
+    <ResponseField name="perspective" type="string">
+      Narrative perspective
+    </ResponseField>
+    <ResponseField name="setting" type="string">
+      Story setting
+    </ResponseField>
+    <ResponseField name="tone" type="string">
+      Story tone
+    </ResponseField>
+    <ResponseField name="storyLength" type="string">
+      Story length designation
+    </ResponseField>
+    <ResponseField name="story" type="string">
+      The story content
+    </ResponseField>
+    <ResponseField name="_creationTime" type="number">
+      Timestamp when story was created
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+```typescript
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+
+function MyStories() {
+  const stories = useQuery(api.stories.getStories, {
+    userId: "user_123"
+  });
+
+  if (!stories) return <div>Loading...</div>;
+
+  return (
+    <div>
+      <h2>My Bible Stories</h2>
+      {stories.map((story) => (
+        <div key={story._id}>
+          <h3>{story.title}</h3>
+          <p>
+            <strong>{story.chapterReference}</strong> - {story.tone} tone
+          </p>
+          <p>{story.story.substring(0, 200)}...</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+---
+
+## getStory
+
+Retrieve a single story by its ID.
+
+<ParamField path="id" type="Id<'stories'>" required>
+  The unique identifier of the story to retrieve
+</ParamField>
+
+<ParamField path="userId" type="string" required>
+  The user ID requesting access to verify ownership
+</ParamField>
+
+<ResponseField name="story" type="object">
+  The complete story object
+  <Expandable title="Story Fields">
+    <ResponseField name="_id" type="Id<'stories'>">
+      Unique story identifier
+    </ResponseField>
+    <ResponseField name="title" type="string">
+      Story title
+    </ResponseField>
+    <ResponseField name="bibleId" type="string">
+      Bible translation identifier
+    </ResponseField>
+    <ResponseField name="chapterId" type="string">
+      Chapter identifier
+    </ResponseField>
+    <ResponseField name="chapterReference" type="string">
+      Human-readable chapter reference
+    </ResponseField>
+    <ResponseField name="userId" type="string">
+      User who created the story
+    </ResponseField>
+    <ResponseField name="perspective" type="string">
+      Narrative perspective
+    </ResponseField>
+    <ResponseField name="setting" type="string">
+      Story setting
+    </ResponseField>
+    <ResponseField name="tone" type="string">
+      Story tone
+    </ResponseField>
+    <ResponseField name="storyLength" type="string">
+      Story length designation
+    </ResponseField>
+    <ResponseField name="story" type="string">
+      The complete story content
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<Note>
+  This function validates that the requesting user owns the story before returning data.
+</Note>
+
+```typescript
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
+
+function StoryDetail({ storyId }: { storyId: Id<"stories"> }) {
+  const story = useQuery(api.stories.getStory, {
+    id: storyId,
+    userId: "user_123"
+  });
+
+  if (!story) return <div>Loading...</div>;
+
+  return (
+    <article>
+      <h1>{story.title}</h1>
+      <div>
+        <span>Based on {story.chapterReference}</span>
+        <span>Perspective: {story.perspective}</span>
+        <span>Tone: {story.tone}</span>
+      </div>
+      <div>
+        {story.story}
+      </div>
+    </article>
+  );
+}
+```
+
+---
+
+## deleteStory
+
+Delete a story permanently.
+
+<ParamField path="id" type="Id<'stories'>" required>
+  The unique identifier of the story to delete
+</ParamField>
+
+<ParamField path="userId" type="string" required>
+  The user ID requesting the deletion to verify ownership
+</ParamField>
+
+<ResponseField name="response" type="null">
+  Returns null on successful deletion
+</ResponseField>
+
+<Note>
+  This function validates that the requesting user owns the story before allowing deletion.
+  This action is permanent and cannot be undone.
+</Note>
+
+```typescript
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
+
+function DeleteStoryButton({ storyId }: { storyId: Id<"stories"> }) {
+  const deleteStory = useMutation(api.stories.deleteStory);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!confirm("Are you sure you want to delete this story? This cannot be undone.")) {
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      await deleteStory({
+        id: storyId,
+        userId: "user_123"
+      });
+      // Redirect or update UI after deletion
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <button onClick={handleDelete} disabled={deleting}>
+      {deleting ? "Deleting..." : "Delete Story"}
+    </button>
+  );
+}
+```

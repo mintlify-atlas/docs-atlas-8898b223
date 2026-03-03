@@ -1,0 +1,322 @@
+---
+title: UI Components
+description: Shared UI components built on Radix UI primitives
+---
+
+Your Bible uses a comprehensive UI component library built on top of Radix UI primitives, styled with Tailwind CSS and customized for consistent design across the application.
+
+## Core Components
+
+### Button
+
+A versatile button component with multiple variants and sizes.
+
+#### Props
+
+<ParamField path="variant" type="string" optional default="default">
+  Visual style of the button
+  
+  Options: `default`, `destructive`, `outline`, `secondary`, `ghost`, `link`
+</ParamField>
+
+<ParamField path="size" type="string" optional default="default">
+  Size of the button
+  
+  Options: `default`, `sm`, `lg`, `icon`
+</ParamField>
+
+<ParamField path="asChild" type="boolean" optional default="false">
+  Whether to render as a child component using Radix Slot
+</ParamField>
+
+#### Usage Example
+
+```tsx
+import { Button } from '@/components/ui/button'
+
+<Button variant="default" size="default">
+  Click me
+</Button>
+
+<Button variant="destructive" size="sm">
+  Delete
+</Button>
+
+<Button variant="outline" size="icon">
+  <IconComponent />
+</Button>
+```
+
+---
+
+### Card
+
+A container component with header, content, and footer sections.
+
+#### Components
+
+- `Card` - Main container
+- `CardHeader` - Header section with grid layout
+- `CardTitle` - Title text with semibold styling
+- `CardDescription` - Subtitle text in muted color
+- `CardAction` - Action buttons in header
+- `CardContent` - Main content area
+- `CardFooter` - Footer section
+
+#### Usage Example
+
+```tsx
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+  CardAction,
+} from '@/components/ui/card'
+
+<Card>
+  <CardHeader>
+    <CardTitle>Card Title</CardTitle>
+    <CardDescription>Card description text</CardDescription>
+    <CardAction>
+      <Button>Action</Button>
+    </CardAction>
+  </CardHeader>
+  <CardContent>
+    Main content goes here
+  </CardContent>
+  <CardFooter>
+    Footer content
+  </CardFooter>
+</Card>
+```
+
+<Note>
+  The Card component uses CSS grid for layout and includes responsive padding and spacing.
+</Note>
+
+---
+
+### Dialog
+
+A modal dialog component for displaying content in an overlay.
+
+#### Components
+
+- `Dialog` - Root component
+- `DialogTrigger` - Element that opens the dialog
+- `DialogContent` - Main dialog container
+- `DialogHeader` - Header section
+- `DialogTitle` - Dialog title
+- `DialogDescription` - Dialog description
+- `DialogFooter` - Footer with actions
+- `DialogClose` - Close button
+
+#### Props
+
+<ParamField path="showCloseButton" type="boolean" optional default="true">
+  Whether to show the close button in the top-right corner (DialogContent only)
+</ParamField>
+
+#### Usage Example
+
+```tsx
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+
+<Dialog>
+  <DialogTrigger asChild>
+    <Button>Open Dialog</Button>
+  </DialogTrigger>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Dialog Title</DialogTitle>
+      <DialogDescription>
+        Dialog description goes here
+      </DialogDescription>
+    </DialogHeader>
+    <div>Dialog content</div>
+    <DialogFooter>
+      <Button>Save</Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+```
+
+---
+
+### Input
+
+A styled text input component.
+
+#### Props
+
+<ParamField path="type" type="string" optional>
+  HTML input type (text, email, password, etc.)
+</ParamField>
+
+All standard HTML input attributes are supported.
+
+#### Usage Example
+
+```tsx
+import { Input } from '@/components/ui/input'
+
+<Input 
+  type="text" 
+  placeholder="Enter your name" 
+/>
+
+<Input 
+  type="email" 
+  placeholder="Enter your email"
+  aria-invalid={!!errors.email}
+/>
+```
+
+<Note>
+  The Input component includes focus-visible rings, error states via `aria-invalid`, and dark mode support.
+</Note>
+
+---
+
+### Select
+
+A styled select dropdown component.
+
+#### Components
+
+- `Select` - Root component
+- `SelectTrigger` - Button that opens the select
+- `SelectValue` - Displays selected value
+- `SelectContent` - Dropdown container
+- `SelectItem` - Individual option
+- `SelectLabel` - Label for option groups
+- `SelectGroup` - Groups related options
+- `SelectSeparator` - Visual separator
+
+#### Props (SelectTrigger)
+
+<ParamField path="size" type="string" optional default="default">
+  Size of the trigger button
+  
+  Options: `default`, `sm`
+</ParamField>
+
+#### Usage Example
+
+```tsx
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+
+<Select value={value} onValueChange={setValue}>
+  <SelectTrigger className="w-[180px]">
+    <SelectValue placeholder="Select option" />
+  </SelectTrigger>
+  <SelectContent>
+    <SelectItem value="option1">Option 1</SelectItem>
+    <SelectItem value="option2">Option 2</SelectItem>
+    <SelectItem value="option3">Option 3</SelectItem>
+  </SelectContent>
+</Select>
+```
+
+---
+
+## Additional UI Components
+
+The UI library includes many more components for various use cases:
+
+### Layout & Navigation
+
+- `Tabs` - Tabbed interfaces
+- `Sheet` - Side drawer component
+- `ScrollArea` - Styled scrollable container
+- `Separator` - Visual divider
+
+### Feedback & Display
+
+- `AlertDialog` - Confirmation dialogs
+- `Popover` - Floating popovers
+- `Tooltip` - Hover tooltips
+- `Skeleton` - Loading placeholders
+- `Avatar` - User avatars
+- `Timeline` - Event timeline display
+
+### Forms & Input
+
+- `Checkbox` - Checkbox input
+- `Textarea` - Multi-line text input
+- `Command` - Command palette/search
+- `Calendar` - Date picker
+- `Label` - Form labels
+
+### Editor Components
+
+Your Bible includes a rich set of Plate editor components for note-taking:
+
+- `Editor` / `EditorStatic` - Rich text editor
+- `Toolbar` / `FixedToolbar` - Editor toolbars
+- Various node types: paragraphs, headings, lists, code blocks, media
+- Formatting buttons for marks, links, and more
+
+### Media Components
+
+- `MediaImageNode` - Image embeds
+- `MediaVideoNode` - Video embeds
+- `MediaAudioNode` - Audio embeds
+- `MediaFileNode` - File attachments
+- `MediaEmbedNode` - URL embeds
+
+<Note>
+  All UI components follow a consistent design system with support for dark mode, focus states, error states, and accessibility features.
+</Note>
+
+---
+
+## Styling Pattern
+
+All components use the `cn()` utility for conditional className merging:
+
+```tsx
+import { cn } from '@/lib/utils'
+
+className={cn(
+  "base-classes",
+  conditionalClass && "conditional-classes",
+  className // Allow overrides
+)}
+```
+
+## Accessibility
+
+Components include:
+
+- Proper ARIA attributes
+- Keyboard navigation support
+- Focus management
+- Screen reader labels
+- Error state announcements via `aria-invalid`
+
+## Customization
+
+Components can be customized via:
+
+1. `className` prop for Tailwind classes
+2. CSS variables for theme colors
+3. Component variants where available
+4. Radix UI props for behavior customization

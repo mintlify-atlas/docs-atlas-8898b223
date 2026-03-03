@@ -1,0 +1,379 @@
+---
+title: 'Configuration'
+description: 'Complete guide to configuring environment variables and services for Your Bible'
+---
+
+## Overview
+
+Your Bible requires several environment variables to connect to external services including API.Bible, Google Gemini AI, Redis, and various authentication providers.
+
+## Environment Variables
+
+Create a `.env` file in your project root with the following variables:
+
+```env
+API_BASE_URL=
+API_KEY=
+BETTER_AUTH_SECRET=
+BETTER_AUTH_URL=
+DATABASE_URL=
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+UPLOADTHING_TOKEN=
+GEMINI_MODEL=
+GEMINI_API_KEY=
+KV_URL=
+KV_REST_API_URL=
+KV_REST_API_TOKEN=
+KV_REST_API_READ_ONLY_TOKEN=
+REDIS_URL=
+CONVEX_DEPLOYMENT=
+VITE_CONVEX_URL=
+```
+
+<Warning>
+  Never commit your `.env` file to version control. The `.env.example` file is provided as a template.
+</Warning>
+
+## API.Bible Configuration
+
+Your Bible uses API.Bible to access multiple Bible translations and search capabilities.
+
+### Getting Your API Key
+
+<Steps>
+  <Step title="Create an Account">
+    Visit [API.Bible](https://scripture.api.bible/) and create a free account.
+  </Step>
+
+  <Step title="Generate API Key">
+    After signing in, navigate to your dashboard and generate a new API key.
+  </Step>
+
+  <Step title="Add to Environment">
+    Add your API key to `.env`:
+    ```env
+    API_BASE_URL=https://api.scripture.api.bible/v1
+    API_KEY=your_api_bible_key_here
+    ```
+  </Step>
+</Steps>
+
+### API.Bible Features Used
+
+- **Bible Translations**: Access to multiple Bible versions
+- **Chapter Content**: Retrieve full chapter text
+- **Verse Search**: Keyword search across Bible text
+- **Metadata**: Book names, chapter counts, and verse references
+
+<Note>
+  The free tier of API.Bible includes 1,000 requests per day, which is sufficient for most use cases.
+</Note>
+
+## Google Gemini AI Configuration
+
+Google Gemini AI powers the AI story generation feature.
+
+### Getting Your API Key
+
+<Steps>
+  <Step title="Access Google AI Studio">
+    Go to [Google AI Studio](https://aistudio.google.com/app/apikey) and sign in with your Google account.
+  </Step>
+
+  <Step title="Create API Key">
+    Click "Create API Key" and select a Google Cloud project or create a new one.
+  </Step>
+
+  <Step title="Configure Environment">
+    Add your Gemini credentials to `.env`:
+    ```env
+    GEMINI_MODEL=gemini-1.5-flash
+    GEMINI_API_KEY=your_gemini_api_key_here
+    ```
+  </Step>
+</Steps>
+
+### Supported Models
+
+Your Bible is configured to use `gemini-1.5-flash` by default, which provides:
+
+- Fast response times
+- Cost-effective operation
+- High-quality story generation
+- Support for long context windows
+
+<Tip>
+  You can also use `gemini-1.5-pro` for more sophisticated outputs, but it will be slower and more expensive.
+</Tip>
+
+### Usage and Costs
+
+Gemini API pricing (as of 2024):
+
+- **gemini-1.5-flash**: Free tier includes 15 requests per minute
+- **gemini-1.5-pro**: Free tier includes 2 requests per minute
+
+<Note>
+  The application includes rate limiting to prevent excessive API usage. See the Redis configuration section below.
+</Note>
+
+## Redis Configuration for Rate Limiting
+
+Redis is used to implement rate limiting for the AI story generation feature, preventing abuse and managing API costs.
+
+### Using Vercel KV (Recommended)
+
+<Steps>
+  <Step title="Create Vercel KV Database">
+    1. Go to your [Vercel Dashboard](https://vercel.com/dashboard)
+    2. Navigate to the Storage tab
+    3. Create a new KV database
+  </Step>
+
+  <Step title="Copy Environment Variables">
+    Vercel will provide you with the necessary environment variables:
+    ```env
+    KV_URL=your_kv_url
+    KV_REST_API_URL=your_kv_rest_api_url
+    KV_REST_API_TOKEN=your_kv_rest_api_token
+    KV_REST_API_READ_ONLY_TOKEN=your_kv_rest_api_read_only_token
+    ```
+  </Step>
+
+  <Step title="Link to Project">
+    Connect your Vercel KV database to your project through the Vercel dashboard.
+  </Step>
+</Steps>
+
+### Using Upstash Redis
+
+Alternatively, you can use Upstash Redis:
+
+<Steps>
+  <Step title="Create Upstash Account">
+    Sign up at [Upstash](https://upstash.com/) and create a new Redis database.
+  </Step>
+
+  <Step title="Get Connection Details">
+    Copy the Redis URL and REST API credentials.
+  </Step>
+
+  <Step title="Configure Environment">
+    ```env
+    REDIS_URL=your_redis_url
+    KV_REST_API_URL=your_upstash_rest_url
+    KV_REST_API_TOKEN=your_upstash_rest_token
+    KV_REST_API_READ_ONLY_TOKEN=your_upstash_read_only_token
+    ```
+  </Step>
+</Steps>
+
+### Rate Limiting Rules
+
+The application implements the following rate limits for story generation:
+
+- **Per User**: Limited number of story generations per hour
+- **Global**: Maximum total generations across all users
+
+<Warning>
+  Without Redis configured, rate limiting will not work, potentially leading to unexpected API costs.
+</Warning>
+
+## Database Configuration
+
+Your Bible uses PostgreSQL for storing user data, authentication information, notes, and other persistent data.
+
+### Using Neon (Recommended)
+
+<Steps>
+  <Step title="Create Neon Account">
+    Sign up at [Neon](https://neon.tech/) for a free PostgreSQL database.
+  </Step>
+
+  <Step title="Create New Project">
+    Create a new project and select your preferred region.
+  </Step>
+
+  <Step title="Copy Connection String">
+    Copy the connection string from your Neon dashboard:
+    ```env
+    DATABASE_URL=postgresql://user:password@host/database?sslmode=require
+    ```
+  </Step>
+
+  <Step title="Run Migrations">
+    The database schema will be created automatically by Better Auth and Drizzle ORM when you first run the application.
+  </Step>
+</Steps>
+
+### Alternative Database Providers
+
+You can also use:
+
+- **Vercel Postgres**: Integrated with Vercel deployments
+- **Supabase**: PostgreSQL with additional features
+- **Railway**: Simple PostgreSQL hosting
+- **Self-hosted**: Your own PostgreSQL instance
+
+<Note>
+  Ensure your database supports SSL connections, which is required by most hosting platforms.
+</Note>
+
+## Authentication Configuration
+
+### Better Auth Setup
+
+Configure Better Auth for user authentication:
+
+```env
+BETTER_AUTH_SECRET=your_generated_secret_here
+BETTER_AUTH_URL=http://localhost:5173
+```
+
+<Tip>
+  Generate a secure secret using:
+  ```bash
+  openssl rand -base64 32
+  ```
+</Tip>
+
+### GitHub OAuth (Optional)
+
+If you want to enable GitHub login:
+
+<Steps>
+  <Step title="Create OAuth App">
+    Go to [GitHub Developer Settings](https://github.com/settings/developers) and create a new OAuth App.
+  </Step>
+
+  <Step title="Configure URLs">
+    - **Homepage URL**: `http://localhost:5173` (development) or your production URL
+    - **Callback URL**: `http://localhost:5173/api/auth/callback/github`
+  </Step>
+
+  <Step title="Add Credentials">
+    ```env
+    GITHUB_CLIENT_ID=your_github_client_id
+    GITHUB_CLIENT_SECRET=your_github_client_secret
+    ```
+  </Step>
+</Steps>
+
+## Convex Configuration
+
+Convex is used for real-time data synchronization for collections, notes, and stories. See the [Convex Setup Guide](/guides/convex-setup) for detailed instructions.
+
+```env
+CONVEX_DEPLOYMENT=your_convex_deployment
+VITE_CONVEX_URL=your_convex_url
+```
+
+## UploadThing Configuration (Optional)
+
+If you plan to implement file upload features:
+
+<Steps>
+  <Step title="Create UploadThing Account">
+    Sign up at [UploadThing](https://uploadthing.com/).
+  </Step>
+
+  <Step title="Get API Token">
+    Generate an API token from your dashboard.
+  </Step>
+
+  <Step title="Add to Environment">
+    ```env
+    UPLOADTHING_TOKEN=your_uploadthing_token
+    ```
+  </Step>
+</Steps>
+
+<Note>
+  UploadThing configuration is optional and only needed if you implement custom file upload features.
+</Note>
+
+## Environment-Specific Configuration
+
+### Development Environment
+
+```env
+BETTER_AUTH_URL=http://localhost:5173
+VITE_CONVEX_URL=https://your-dev-deployment.convex.cloud
+```
+
+### Production Environment
+
+```env
+BETTER_AUTH_URL=https://yourdomain.com
+VITE_CONVEX_URL=https://your-prod-deployment.convex.cloud
+```
+
+<Warning>
+  Make sure to update `BETTER_AUTH_URL` to match your production domain when deploying.
+</Warning>
+
+## Verifying Configuration
+
+After setting up your environment variables, verify the configuration:
+
+<CodeGroup>
+```bash npm
+npm run dev
+```
+
+```bash pnpm
+pnpm dev
+```
+
+```bash yarn
+yarn dev
+```
+</CodeGroup>
+
+Check the console for any configuration errors. The application should start without warnings if all variables are correctly set.
+
+## Configuration Checklist
+
+Use this checklist to ensure all services are properly configured:
+
+- [ ] API.Bible API key obtained and added
+- [ ] Google Gemini API key configured
+- [ ] Redis/KV database created and connected
+- [ ] PostgreSQL database provisioned
+- [ ] Better Auth secret generated
+- [ ] Better Auth URL set correctly
+- [ ] Convex project created and linked
+- [ ] GitHub OAuth configured (if using)
+- [ ] All environment variables added to `.env`
+- [ ] Application starts without errors
+
+## Troubleshooting
+
+### Missing Environment Variables
+
+If you see errors about missing environment variables:
+1. Check that your `.env` file is in the project root
+2. Verify all required variables are present
+3. Restart your development server
+
+### Database Connection Issues
+
+If the database fails to connect:
+- Verify the `DATABASE_URL` format is correct
+- Check that your database is running and accessible
+- Ensure SSL mode is enabled if required
+
+### API Rate Limits
+
+If you hit rate limits:
+- Check your usage on the respective service dashboards
+- Consider upgrading to a paid tier if needed
+- Verify rate limiting is working correctly with Redis
+
+### CORS Errors
+
+If you encounter CORS issues:
+- Verify `BETTER_AUTH_URL` matches your current domain
+- Check that all API endpoints allow your origin
+- Ensure callback URLs are correctly configured

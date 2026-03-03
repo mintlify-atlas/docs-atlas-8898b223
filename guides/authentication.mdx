@@ -1,0 +1,327 @@
+---
+title: 'Authentication'
+description: 'Learn how to set up and use Better Auth for secure user authentication in Your Bible'
+---
+
+## Overview
+
+Your Bible uses [Better Auth](https://better-auth.com) to provide secure, type-safe authentication. The application supports email-based authentication with optional GitHub OAuth integration.
+
+## Better Auth Setup
+
+Better Auth is configured with a Drizzle adapter to work seamlessly with PostgreSQL.
+
+### Server Configuration
+
+The main authentication configuration is located in `src/lib/auth.ts`:
+
+```typescript
+import { db } from "@/db";
+import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { reactStartCookies } from "better-auth/react-start";
+
+export const auth = betterAuth({
+    database: drizzleAdapter(db, {
+        provider: 'pg'
+    }),
+    emailAndPassword: {
+        enabled: true,
+        autoSignIn: true,
+        requireEmailVerification: false,
+    },
+    socialProviders: {
+        github: {
+            clientId: process.env.GITHUB_CLIENT_ID as string,
+            clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
+        }
+    },
+    plugins: [reactStartCookies()]
+})
+```
+
+### Client Configuration
+
+The client-side authentication utilities are in `src/lib/auth-client.ts`:
+
+```typescript
+import { createAuthClient } from "better-auth/react"
+
+export const authClient = createAuthClient({
+    baseURL: process.env.BETTER_AUTH_URL!,
+})
+
+export const { signIn, signUp, useSession, signOut } = authClient
+```
+
+## Environment Variables
+
+Add these variables to your `.env` file:
+
+```env
+BETTER_AUTH_SECRET=your_better_auth_secret_here
+BETTER_AUTH_URL=your_better_auth_url_here
+DATABASE_URL=your_database_url_here
+
+# Optional: GitHub OAuth
+GITHUB_CLIENT_ID=your_github_client_id_here
+GITHUB_CLIENT_SECRET=your_github_client_secret_here
+```
+
+<Note>
+  The `BETTER_AUTH_SECRET` should be a long, random string. You can generate one using:
+  ```bash
+  openssl rand -base64 32
+  ```
+</Note>
+
+<Warning>
+  Make sure `BETTER_AUTH_URL` matches your application's URL. For local development, use `http://localhost:5173`. For production, use your deployed domain.
+</Warning>
+
+## Email-Based Authentication
+
+### Sign Up
+
+To implement user registration in your components:
+
+```tsx
+import { signUp } from '@/lib/auth-client'
+
+const handleSignUp = async (email: string, password: string, name: string) => {
+  try {
+    await signUp.email({
+      email,
+      password,
+      name,
+    })
+    // User is automatically signed in after registration
+  } catch (error) {
+    console.error('Sign up failed:', error)
+  }
+}
+```
+
+### Sign In
+
+To implement user login:
+
+```tsx
+import { signIn } from '@/lib/auth-client'
+
+const handleSignIn = async (email: string, password: string) => {
+  try {
+    await signIn.email({
+      email,
+      password,
+    })
+  } catch (error) {
+    console.error('Sign in failed:', error)
+  }
+}
+```
+
+### Sign Out
+
+To implement logout functionality:
+
+```tsx
+import { signOut } from '@/lib/auth-client'
+
+const handleSignOut = async () => {
+  try {
+    await signOut()
+  } catch (error) {
+    console.error('Sign out failed:', error)
+  }
+}
+```
+
+## Session Management
+
+### Using the Session Hook
+
+Better Auth provides a `useSession` hook to access the current user's session:
+
+```tsx
+import { useSession } from '@/lib/auth-client'
+
+function UserProfile() {
+  const { data: session, isPending } = useSession()
+
+  if (isPending) {
+    return <div>Loading...</div>
+  }
+
+  if (!session?.user) {
+    return <div>Please sign in</div>
+  }
+
+  return (
+    <div>
+      <h1>Welcome, {session.user.name}!</h1>
+      <p>Email: {session.user.email}</p>
+    </div>
+  )
+}
+```
+
+### Session Data Structure
+
+The session object contains:
+
+```typescript
+interface Session {
+  user: {
+    id: string
+    email: string
+    name: string
+    image?: string
+  }
+  session: {
+    token: string
+    expiresAt: Date
+  }
+}
+```
+
+## Protected Routes
+
+To protect routes that require authentication, use the session hook to check if a user is logged in:
+
+```tsx
+import { useSession } from '@/lib/auth-client'
+import { Navigate } from '@tanstack/react-router'
+
+function ProtectedPage() {
+  const { data: session, isPending } = useSession()
+
+  if (isPending) {
+    return <div>Loading...</div>
+  }
+
+  if (!session?.user) {
+    return <Navigate to="/sign-in" />
+  }
+
+  return (
+    <div>
+      {/* Protected content */}
+    </div>
+  )
+}
+```
+
+<Tip>
+  You can also create a higher-order component or a custom hook to simplify route protection across multiple pages.
+</Tip>
+
+## GitHub OAuth (Optional)
+
+### Setting Up GitHub OAuth
+
+<Steps>
+  <Step title="Create GitHub OAuth App">
+    1. Go to [GitHub Developer Settings](https://github.com/settings/developers)
+    2. Click "New OAuth App"
+    3. Fill in the application details:
+       - **Application name**: Your Bible
+       - **Homepage URL**: `http://localhost:5173` (or your production URL)
+       - **Authorization callback URL**: `http://localhost:5173/api/auth/callback/github`
+    4. Copy the Client ID and generate a Client Secret
+  </Step>
+
+  <Step title="Add Credentials to Environment">
+    Add your GitHub OAuth credentials to `.env`:
+    ```env
+    GITHUB_CLIENT_ID=your_github_client_id
+    GITHUB_CLIENT_SECRET=your_github_client_secret
+    ```
+  </Step>
+
+  <Step title="Implement GitHub Sign In">
+    ```tsx
+    import { signIn } from '@/lib/auth-client'
+
+    const handleGitHubSignIn = async () => {
+      try {
+        await signIn.social({
+          provider: 'github'
+        })
+      } catch (error) {
+        console.error('GitHub sign in failed:', error)
+      }
+    }
+    ```
+  </Step>
+</Steps>
+
+## Authentication Features
+
+### Auto Sign In
+
+The application is configured with `autoSignIn: true`, which means users are automatically signed in after successful registration. No additional login step is required.
+
+### Email Verification
+
+Email verification is currently disabled (`requireEmailVerification: false`) for a smoother development experience. You can enable it in production:
+
+```typescript
+emailAndPassword: {
+    enabled: true,
+    autoSignIn: false,
+    requireEmailVerification: true,
+}
+```
+
+<Warning>
+  Enabling email verification requires setting up an email service provider and configuring the email templates in Better Auth.
+</Warning>
+
+## Database Tables
+
+Better Auth automatically creates and manages the following tables in your PostgreSQL database:
+
+- `users` - User account information
+- `sessions` - Active user sessions
+- `accounts` - OAuth provider accounts (for GitHub login)
+- `verificationTokens` - Email verification tokens (if enabled)
+
+<Note>
+  These tables are created automatically when you first run the application with Better Auth configured.
+</Note>
+
+## Best Practices
+
+1. **Secure Secrets**: Never commit your `.env` file. Keep `BETTER_AUTH_SECRET` secure and unique per environment.
+
+2. **HTTPS in Production**: Always use HTTPS in production. Better Auth requires secure connections for cookies.
+
+3. **Session Expiration**: Configure appropriate session expiration times based on your security requirements.
+
+4. **Error Handling**: Always handle authentication errors gracefully and provide clear feedback to users.
+
+5. **User Data**: Only request and store user data that you actually need.
+
+## Troubleshooting
+
+### Session Not Persisting
+
+If sessions aren't persisting across page reloads:
+- Check that `BETTER_AUTH_URL` is correctly set
+- Verify that cookies are enabled in the browser
+- Ensure your domain supports cookies (localhost works fine)
+
+### Authentication Errors
+
+If you see authentication errors:
+- Verify all environment variables are set correctly
+- Check that the database connection is working
+- Ensure `BETTER_AUTH_SECRET` is set and consistent
+
+### OAuth Callback Issues
+
+For GitHub OAuth problems:
+- Verify the callback URL in GitHub OAuth settings matches your application
+- Check that `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` are correct
+- Ensure the GitHub OAuth app is active

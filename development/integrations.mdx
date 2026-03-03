@@ -1,0 +1,769 @@
+---
+title: External Integrations
+description: Detailed documentation for all external APIs and services integrated with Your Bible
+---
+
+## Overview
+
+Your Bible integrates with multiple external services to provide its full functionality. This page documents each integration, including setup, configuration, API usage, and best practices.
+
+<CardGroup cols={2}>
+  <Card title="API.Bible" icon="book">
+    Bible content, translations, and search
+  </Card>
+  
+  <Card title="Google Gemini AI" icon="sparkles">
+    AI-powered story generation
+  </Card>
+  
+  <Card title="Convex" icon="database">
+    Real-time backend and database
+  </Card>
+  
+  <Card title="Better Auth" icon="lock">
+    Authentication and user management
+  </Card>
+  
+  <Card title="Upstash Redis" icon="bolt">
+    Rate limiting and caching
+  </Card>
+  
+  <Card title="PostgreSQL (Neon)" icon="cylinder">
+    User and session data storage
+  </Card>
+</CardGroup>
+
+## API.Bible
+
+<Info>
+  API.Bible provides access to multiple Bible translations, chapters, verses, and search functionality.
+</Info>
+
+### Configuration
+
+Configured in `src/lib/axios.ts:1`:
+
+```typescript
+import axios from 'axios'
+
+const API_KEY = process.env.API_KEY
+const API_BASE_URL = process.env.API_BASE_URL
+
+export const axiosInstance = axios.create({
+    baseURL: API_BASE_URL,
+    headers: {
+        'api-key': API_KEY,
+        'Content-Type': 'application/json'
+    }
+})
+```
+
+### Environment Variables
+
+<ParamField path="API_BASE_URL" type="string" required>
+  **Value:** `https://api.scripture.api.bible/v1`
+  
+  Base URL for all API.Bible requests.
+</ParamField>
+
+<ParamField path="API_KEY" type="string" required>
+  Your API.Bible API key from [scripture.api.bible](https://scripture.api.bible/).
+  
+  **How to get:**
+  1. Sign up at API.Bible
+  2. Create an API key
+  3. Add to `.env` file
+</ParamField>
+
+### Key Features
+
+<Accordion title="Bible Translations">
+  **Endpoint:** `GET /bibles`
+  
+  Retrieves list of available Bible translations.
+  
+  **Response:**
+  ```json
+  {
+    "data": [
+      {
+        "id": "de4e12af7f28f599-02",
+        "name": "King James Version",
+        "abbreviation": "KJV",
+        "language": { "id": "eng", "name": "English" }
+      }
+    ]
+  }
+  ```
+  
+  **Usage:** Translation selector dropdown
+</Accordion>
+
+<Accordion title="Chapter Content">
+  **Endpoint:** `GET /bibles/{bibleId}/chapters/{chapterId}`
+  
+  Retrieves full chapter content with verses.
+  
+  **Parameters:**
+  - `bibleId`: Translation ID (e.g., `"de4e12af7f28f599-02"`)
+  - `chapterId`: Chapter ID (e.g., `"GEN.1"`, `"JHN.3"`)
+  - `include-verse-numbers`: `true` (optional)
+  
+  **Response:**
+  ```json
+  {
+    "data": {
+      "id": "GEN.1",
+      "bibleId": "de4e12af7f28f599-02",
+      "number": "1",
+      "bookId": "GEN",
+      "content": "<p>In the beginning...</p>"
+    }
+  }
+  ```
+  
+  **Usage:** Bible reader component
+</Accordion>
+
+<Accordion title="Search">
+  **Endpoint:** `GET /bibles/{bibleId}/search`
+  
+  Search Bible text for keywords.
+  
+  **Parameters:**
+  - `query`: Search term (e.g., `"love"`, `"faith"`)
+  - `limit`: Results per page (default: 10)
+  - `offset`: Pagination offset
+  
+  **Response:**
+  ```json
+  {
+    "data": {
+      "verses": [
+        {
+          "id": "JHN.3.16",
+          "reference": "John 3:16",
+          "text": "For God so loved the world..."
+        }
+      ],
+      "total": 256
+    }
+  }
+  ```
+  
+  **Usage:** Search functionality
+</Accordion>
+
+<Accordion title="Books and Chapters">
+  **Endpoint:** `GET /bibles/{bibleId}/books/{bookId}/chapters`
+  
+  List all chapters in a book.
+  
+  **Usage:** Chapter navigation
+</Accordion>
+
+### Rate Limits
+
+<Warning>
+  Free tier rate limits:
+  - **500 requests per day**
+  - **10 requests per second**
+</Warning>
+
+### Best Practices
+
+- Cache translation lists (rarely change)
+- Cache chapter content (use TanStack Query)
+- Implement exponential backoff for retries
+- Handle rate limit errors gracefully
+- Use `include-verse-numbers` parameter for better verse identification
+
+### Error Handling
+
+```typescript
+try {
+  const response = await axiosInstance.get(`/bibles/${bibleId}/chapters/${chapterId}`);
+  return response.data;
+} catch (error) {
+  if (error.response?.status === 429) {
+    // Rate limit exceeded
+    throw new Error('Too many requests. Please try again later.');
+  } else if (error.response?.status === 404) {
+    // Chapter not found
+    throw new Error('Chapter not found.');
+  }
+  throw error;
+}
+```
+
+## Google Gemini AI
+
+<Info>
+  Google Gemini AI generates creative stories based on biblical passages.
+</Info>
+
+### Configuration
+
+Configured in `src/lib/gemini.ts:1`:
+
+```typescript
+import { GoogleGenAI } from "@google/genai"
+
+function createAIClient() {
+    const apiKey = process.env.GEMINI_API_KEY
+    if (!apiKey) {
+        throw new Error('Missing Gemini API key')
+    }
+    return new GoogleGenAI({ apiKey })
+}
+
+let aiInstance: GoogleGenAI | null = null
+
+export function getAI() {
+    if (!aiInstance) {
+        aiInstance = createAIClient()
+    }
+    return aiInstance
+}
+```
+
+### Environment Variables
+
+<ParamField path="GEMINI_MODEL" type="string" required>
+  **Recommended:** `gemini-1.5-flash`
+  
+  **Alternatives:**
+  - `gemini-1.5-pro` - Higher quality, slower, more expensive
+  - `gemini-1.5-flash` - Balanced speed and quality
+  
+  **Model Comparison:**
+  - Flash: ~0.1s response time, lower cost
+  - Pro: ~1-2s response time, better quality, higher cost
+</ParamField>
+
+<ParamField path="GEMINI_API_KEY" type="string" required>
+  Your Google AI API key from [Google AI Studio](https://ai.google.dev/).
+  
+  **How to get:**
+  1. Visit Google AI Studio
+  2. Sign in with Google account
+  3. Create API key
+  4. Add to `.env` file
+</ParamField>
+
+### Story Generation
+
+**Usage Example:**
+
+```typescript
+import { getAI } from '@/lib/gemini';
+
+const ai = getAI();
+const model = ai.getGenerativeModel({ model: process.env.GEMINI_MODEL });
+
+const prompt = `
+Generate a ${storyLength} story based on the following biblical passage:
+
+${bibleText}
+
+Parameters:
+- Perspective: ${perspective}
+- Setting: ${setting}
+- Tone: ${tone}
+
+Guidelines:
+- Stay true to biblical themes and messages
+- Be respectful and theologically appropriate
+- Make it engaging and well-written
+- Include descriptive details
+`;
+
+const result = await model.generateContent(prompt);
+const story = result.response.text();
+```
+
+### Story Parameters
+
+<ParamField path="perspective" type="string" required>
+  Narrative viewpoint for the story.
+  
+  **Examples:**
+  - "first-person from David's perspective"
+  - "third-person omniscient"
+  - "second-person narrative"
+</ParamField>
+
+<ParamField path="setting" type="string" required>
+  Context or world for the story.
+  
+  **Examples:**
+  - "ancient Israel"
+  - "modern day"
+  - "alternate historical timeline"
+</ParamField>
+
+<ParamField path="tone" type="string" required>
+  Emotional quality of the story.
+  
+  **Examples:**
+  - "contemplative and reflective"
+  - "adventurous and exciting"
+  - "solemn and reverent"
+</ParamField>
+
+<ParamField path="storyLength" type="string" required>
+  Desired story length.
+  
+  **Options:**
+  - `short` - 200-400 words
+  - `medium` - 400-800 words
+  - `long` - 800-1500 words
+</ParamField>
+
+### Rate Limits
+
+**Free Tier:**
+- 60 requests per minute
+- 1,500 requests per day
+
+**Application Rate Limiting:**
+- 5 stories per user per day (enforced via Redis)
+- Prevents excessive API costs
+
+### Best Practices
+
+<AccordionGroup>
+  <Accordion title="Prompt Engineering">
+    - Provide clear context from the biblical passage
+    - Specify all parameters explicitly
+    - Include theological guidelines
+    - Request specific tone and style
+    - Set word count expectations
+  </Accordion>
+  
+  <Accordion title="Error Handling">
+    ```typescript
+    try {
+      const result = await model.generateContent(prompt);
+      return result.response.text();
+    } catch (error) {
+      if (error.message?.includes('quota')) {
+        throw new Error('API quota exceeded');
+      }
+      throw new Error('Failed to generate story');
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Content Filtering">
+    - Gemini has built-in safety filters
+    - Handles inappropriate requests automatically
+    - Returns filtered responses for sensitive topics
+    - May refuse to generate certain content
+  </Accordion>
+</AccordionGroup>
+
+## Convex
+
+<Info>
+  Convex provides real-time database and backend functionality.
+</Info>
+
+### Configuration
+
+**Schema:** `convex/schema.ts`
+
+**Functions:** `convex/*.ts` files
+
+**Client:** Initialized in app
+
+### Environment Variables
+
+<ParamField path="CONVEX_DEPLOYMENT" type="string" required>
+  Convex deployment identifier (auto-generated).
+</ParamField>
+
+<ParamField path="VITE_CONVEX_URL" type="string" required>
+  Convex backend URL for client connections.
+  
+  **Example:** `https://your-project.convex.cloud`
+</ParamField>
+
+### Key Features
+
+<Accordion title="Real-time Queries">
+  Queries automatically update when data changes:
+  
+  ```typescript
+  const collections = useQuery(api.collections.list, {
+    userId: user.id,
+  });
+  // Automatically re-renders on data changes
+  ```
+</Accordion>
+
+<Accordion title="Mutations">
+  Write operations with optimistic updates:
+  
+  ```typescript
+  const createCollection = useMutation(api.collections.create);
+  
+  await createCollection({
+    name: "My Collection",
+    userId: user.id,
+  });
+  ```
+</Accordion>
+
+<Accordion title="Server Functions">
+  Backend logic runs on Convex servers:
+  
+  ```typescript
+  export const create = mutation({
+    args: { name: v.string(), userId: v.string() },
+    handler: async (ctx, args) => {
+      return await ctx.db.insert("collections", args);
+    },
+  });
+  ```
+</Accordion>
+
+### Best Practices
+
+- Use indexes for frequently queried fields
+- Validate all inputs in mutations
+- Implement proper access control
+- Keep functions small and focused
+- Use TypeScript types generated by Convex
+
+See [Database Schema](/development/database-schema) for detailed documentation.
+
+## Better Auth
+
+<Info>
+  Better Auth handles user authentication with email/password and OAuth providers.
+</Info>
+
+### Configuration
+
+Configured in `src/lib/auth.ts:1`:
+
+```typescript
+import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { reactStartCookies } from "better-auth/react-start";
+
+export const auth = betterAuth({
+    database: drizzleAdapter(db, {
+        provider: 'pg'
+    }),
+    emailAndPassword: {
+        enabled: true,
+        autoSignIn: true,
+        requireEmailVerification: false,
+    },
+    socialProviders: {
+        github: {
+            clientId: process.env.GITHUB_CLIENT_ID as string,
+            clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
+        }
+    },
+    plugins: [reactStartCookies()]
+})
+```
+
+### Environment Variables
+
+<ParamField path="BETTER_AUTH_SECRET" type="string" required>
+  Secret key for encrypting sessions and tokens.
+  
+  **Generate:** `openssl rand -base64 32`
+</ParamField>
+
+<ParamField path="BETTER_AUTH_URL" type="string" required>
+  Application base URL for auth callbacks.
+  
+  **Development:** `http://localhost:5173`
+  
+  **Production:** Your domain URL
+</ParamField>
+
+<ParamField path="DATABASE_URL" type="string" required>
+  PostgreSQL connection string for user data.
+</ParamField>
+
+<ParamField path="GITHUB_CLIENT_ID" type="string">
+  GitHub OAuth client ID (optional).
+</ParamField>
+
+<ParamField path="GITHUB_CLIENT_SECRET" type="string">
+  GitHub OAuth client secret (optional).
+</ParamField>
+
+### Features
+
+<Accordion title="Email/Password Authentication">
+  - User registration with email and password
+  - Secure password hashing
+  - Automatic sign-in after registration
+  - No email verification required (configurable)
+  
+  **Usage:**
+  ```typescript
+  const { signIn, signUp } = useAuth();
+  
+  await signUp({
+    email: 'user@example.com',
+    password: 'secure-password',
+  });
+  ```
+</Accordion>
+
+<Accordion title="OAuth (GitHub)">
+  - Sign in with GitHub
+  - Automatic account linking
+  - Profile data import
+  
+  **Setup:**
+  1. Create GitHub OAuth App
+  2. Set callback URL: `{BETTER_AUTH_URL}/api/auth/callback/github`
+  3. Add client ID and secret to `.env`
+</Accordion>
+
+<Accordion title="Session Management">
+  - Cookie-based sessions
+  - Automatic session refresh
+  - Secure, httpOnly cookies
+  - Cross-tab session sync
+</Accordion>
+
+### Best Practices
+
+- Use strong, unique `BETTER_AUTH_SECRET`
+- Enable email verification in production
+- Implement password strength requirements
+- Use HTTPS in production
+- Regularly rotate secrets
+
+## Upstash Redis
+
+<Info>
+  Redis provides rate limiting for story generation to manage API costs.
+</Info>
+
+### Configuration
+
+Configured in `src/lib/redis.ts:1`:
+
+```typescript
+import { Redis } from '@upstash/redis';
+import { Ratelimit } from "@upstash/ratelimit";
+
+export const ratelimit = new Ratelimit({
+    redis: Redis.fromEnv(),
+    limiter: Ratelimit.fixedWindow(5, "86400 s"),
+    analytics: true,
+    prefix: "@upstash/ratelimit",
+});
+```
+
+### Environment Variables
+
+<ParamField path="REDIS_URL" type="string" required>
+  Redis connection URL.
+</ParamField>
+
+<ParamField path="KV_URL" type="string" required>
+  Upstash KV connection URL.
+</ParamField>
+
+<ParamField path="KV_REST_API_URL" type="string" required>
+  REST API URL for Redis operations.
+</ParamField>
+
+<ParamField path="KV_REST_API_TOKEN" type="string" required>
+  Authentication token for REST API.
+</ParamField>
+
+<ParamField path="KV_REST_API_READ_ONLY_TOKEN" type="string" required>
+  Read-only token for security.
+</ParamField>
+
+### Rate Limiting
+
+**Configuration:**
+- **Algorithm:** Fixed window
+- **Limit:** 5 requests per window
+- **Window:** 86,400 seconds (24 hours)
+- **Per:** User ID
+
+**Usage:**
+
+```typescript
+import { ratelimit } from '@/lib/redis';
+
+const { success, reset } = await ratelimit.limit(userId);
+
+if (!success) {
+  const resetDate = new Date(reset);
+  throw new Error(`Rate limit exceeded. Try again at ${resetDate.toLocaleString()}`);
+}
+
+// Proceed with story generation
+```
+
+### Best Practices
+
+- Use user ID as rate limit key
+- Provide clear error messages with reset time
+- Display remaining attempts to users
+- Consider different limits for paid tiers
+- Monitor analytics in Upstash dashboard
+
+## PostgreSQL (Neon)
+
+<Info>
+  PostgreSQL stores user accounts, sessions, and authentication data via Better Auth.
+</Info>
+
+### Environment Variables
+
+<ParamField path="DATABASE_URL" type="string" required>
+  PostgreSQL connection string.
+  
+  **Format:** `postgresql://user:password@host:port/database?sslmode=require`
+  
+  **Neon:** Automatically includes SSL
+  
+  **Local:** `postgresql://localhost/yourbible`
+</ParamField>
+
+### Schema
+
+Managed by Better Auth via Drizzle ORM:
+
+- `users` - User accounts
+- `sessions` - Active sessions
+- `accounts` - OAuth account links
+- `verificationTokens` - Email verification (if enabled)
+
+### Best Practices
+
+- Use SSL in production (`?sslmode=require`)
+- Regular backups (automatic with Neon)
+- Monitor connection pool usage
+- Use connection pooling for serverless
+- Keep schema migrations tracked
+
+## Integration Testing
+
+### Testing Each Service
+
+<CodeGroup>
+```bash API.Bible
+curl -H "api-key: YOUR_KEY" \
+  https://api.scripture.api.bible/v1/bibles
+```
+
+```bash Convex
+npx convex dev
+# Check for successful connection
+```
+
+```bash PostgreSQL
+psql $DATABASE_URL -c "SELECT 1;"
+```
+
+```bash Redis
+redis-cli -u $REDIS_URL PING
+# Should return: PONG
+```
+</CodeGroup>
+
+## Monitoring and Analytics
+
+<AccordionGroup>
+  <Accordion title="API.Bible">
+    - Monitor usage in API.Bible dashboard
+    - Track rate limit usage
+    - Set up alerts for quota warnings
+  </Accordion>
+  
+  <Accordion title="Gemini AI">
+    - Monitor usage in Google Cloud Console
+    - Track token usage and costs
+    - Set up billing alerts
+  </Accordion>
+  
+  <Accordion title="Convex">
+    - View function logs in Convex dashboard
+    - Monitor query performance
+    - Track database size
+  </Accordion>
+  
+  <Accordion title="Upstash">
+    - View rate limit analytics
+    - Monitor Redis operations
+    - Track API usage
+  </Accordion>
+</AccordionGroup>
+
+## Cost Optimization
+
+<CardGroup cols={2}>
+  <Card title="API.Bible" icon="dollar-sign">
+    **Free Tier:** 500 requests/day
+    
+    **Optimization:**
+    - Cache translation lists
+    - Cache chapter content
+    - Use CDN for static content
+  </Card>
+  
+  <Card title="Gemini AI" icon="dollar-sign">
+    **Free Tier:** 60 RPM, 1.5K RPD
+    
+    **Optimization:**
+    - Rate limit (5/day per user)
+    - Use Flash model over Pro
+    - Optimize prompt length
+  </Card>
+  
+  <Card title="Convex" icon="dollar-sign">
+    **Free Tier:** Generous limits
+    
+    **Optimization:**
+    - Use indexes efficiently
+    - Paginate large queries
+    - Clean up old data
+  </Card>
+  
+  <Card title="Neon" icon="dollar-sign">
+    **Free Tier:** 0.5 GB storage
+    
+    **Optimization:**
+    - Archive old sessions
+    - Monitor database size
+    - Use appropriate data types
+  </Card>
+</CardGroup>
+
+## Related Documentation
+
+<CardGroup cols={2}>
+  <Card title="Environment Variables" icon="key" href="/development/environment-variables">
+    Complete environment variable reference
+  </Card>
+  
+  <Card title="Local Setup" icon="laptop-code" href="/development/local-setup">
+    Setting up all integrations locally
+  </Card>
+  
+  <Card title="Database Schema" icon="database" href="/development/database-schema">
+    Convex database schema documentation
+  </Card>
+  
+  <Card title="Deployment" icon="rocket" href="/deployment/overview">
+    Deploying with all integrations
+  </Card>
+</CardGroup>

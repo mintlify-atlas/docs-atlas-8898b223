@@ -1,0 +1,718 @@
+---
+title: 'Bible Server Actions'
+description: 'Server actions for fetching Bible translations, books, chapters, and searching verses'
+icon: 'book-bible'
+---
+
+## Overview
+
+The Bible server actions provide functions to interact with the Bible API, including fetching available translations, retrieving books and chapters, and searching for verses.
+
+All functions are created using TanStack Start's `createServerFn()` and include automatic validation using Zod schemas.
+
+## getBibles
+
+Fetch all available Bible translations.
+
+```typescript
+getBibles(): Promise<BibleSummary[]>
+```
+
+### Returns
+
+<ResponseField name="BibleSummary[]" type="array">
+  Array of Bible translation summaries
+  
+  <Expandable title="BibleSummary properties">
+    <ResponseField name="id" type="string" required>
+      Unique identifier for the Bible translation
+    </ResponseField>
+    
+    <ResponseField name="dblId" type="string" required>
+      Digital Bible Library ID
+    </ResponseField>
+    
+    <ResponseField name="abbreviation" type="string" required>
+      Short abbreviation (e.g., "KJV", "NIV")
+    </ResponseField>
+    
+    <ResponseField name="abbreviationLocal" type="string" required>
+      Localized abbreviation
+    </ResponseField>
+    
+    <ResponseField name="name" type="string" required>
+      Full name of the translation
+    </ResponseField>
+    
+    <ResponseField name="nameLocal" type="string" required>
+      Localized name
+    </ResponseField>
+    
+    <ResponseField name="description" type="string" required>
+      Description of the translation
+    </ResponseField>
+    
+    <ResponseField name="descriptionLocal" type="string" required>
+      Localized description
+    </ResponseField>
+    
+    <ResponseField name="language" type="Language" required>
+      Language information object
+    </ResponseField>
+    
+    <ResponseField name="countries" type="array" required>
+      Array of country objects with id, name, and nameLocal
+    </ResponseField>
+    
+    <ResponseField name="type" type="string" required>
+      Type of Bible (e.g., "text")
+    </ResponseField>
+    
+    <ResponseField name="updatedAt" type="string" required>
+      ISO 8601 timestamp of last update
+    </ResponseField>
+    
+    <ResponseField name="audioBibles" type="AudioBibleSummary[]">
+      Optional array of associated audio Bibles
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Usage
+
+<CodeGroup>
+```typescript Client Component
+import { getBibles } from '@/actions/bible'
+
+export default function BibleSelector() {
+  const [bibles, setBibles] = useState<BibleSummary[]>([])
+  
+  useEffect(() => {
+    getBibles().then(data => {
+      setBibles(data)
+    })
+  }, [])
+  
+  return (
+    <select>
+      {bibles.map(bible => (
+        <option key={bible.id} value={bible.id}>
+          {bible.name} ({bible.abbreviation})
+        </option>
+      ))}
+    </select>
+  )
+}
+```
+
+```typescript Server Component
+import { getBibles } from '@/actions/bible'
+
+export default async function BiblesPage() {
+  const bibles = await getBibles()
+  
+  return (
+    <div>
+      <h1>Available Translations</h1>
+      <ul>
+        {bibles.map(bible => (
+          <li key={bible.id}>
+            <strong>{bible.name}</strong> - {bible.description}
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+```
+</CodeGroup>
+
+### Error Handling
+
+If the API request fails, `getBibles()` returns an empty array `[]` instead of throwing an error. Errors are logged to the console.
+
+---
+
+## getBooks
+
+Retrieve all books for a specific Bible translation, including chapter information.
+
+```typescript
+getBooks(params: { bibleId: string }): Promise<Book[]>
+```
+
+### Parameters
+
+<ParamField path="bibleId" type="string" required>
+  The unique identifier of the Bible translation (e.g., "de4e12af7f28f599-02")
+</ParamField>
+
+### Returns
+
+<ResponseField name="Book[]" type="array">
+  Array of book objects with chapter information
+  
+  <Expandable title="Book properties">
+    <ResponseField name="id" type="string" required>
+      Unique identifier for the book (e.g., "GEN", "MAT")
+    </ResponseField>
+    
+    <ResponseField name="bibleId" type="string" required>
+      The Bible translation ID this book belongs to
+    </ResponseField>
+    
+    <ResponseField name="abbreviation" type="string" required>
+      Short abbreviation of the book (e.g., "Gen", "Matt")
+    </ResponseField>
+    
+    <ResponseField name="name" type="string" required>
+      Short name of the book
+    </ResponseField>
+    
+    <ResponseField name="nameLong" type="string" required>
+      Full name of the book (e.g., "The Book of Genesis")
+    </ResponseField>
+    
+    <ResponseField name="chapters" type="ChapterSummary[]">
+      Optional array of chapter summaries (included when using include-chapters parameter)
+      
+      <Expandable title="ChapterSummary properties">
+        <ResponseField name="id" type="string" required>
+          Unique chapter identifier
+        </ResponseField>
+        
+        <ResponseField name="bibleId" type="string" required>
+          Bible translation ID
+        </ResponseField>
+        
+        <ResponseField name="bookId" type="string" required>
+          Book identifier
+        </ResponseField>
+        
+        <ResponseField name="number" type="string" required>
+          Chapter number
+        </ResponseField>
+        
+        <ResponseField name="reference" type="string" required>
+          Human-readable reference (e.g., "Genesis 1")
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Usage
+
+<CodeGroup>
+```typescript Client Component
+import { getBooks } from '@/actions/bible'
+
+export default function BookList({ bibleId }: { bibleId: string }) {
+  const [books, setBooks] = useState<Book[]>([])
+  
+  useEffect(() => {
+    getBooks({ bibleId }).then(data => {
+      setBooks(data)
+    })
+  }, [bibleId])
+  
+  return (
+    <div>
+      {books.map(book => (
+        <div key={book.id}>
+          <h3>{book.name}</h3>
+          <p>{book.chapters?.length || 0} chapters</p>
+        </div>
+      ))}
+    </div>
+  )
+}
+```
+
+```typescript Server Component
+import { getBooks } from '@/actions/bible'
+
+export default async function BooksPage({ 
+  params 
+}: { 
+  params: { bibleId: string } 
+}) {
+  const books = await getBooks({ bibleId: params.bibleId })
+  
+  return (
+    <div>
+      <h1>Books</h1>
+      {books.map(book => (
+        <article key={book.id}>
+          <h2>{book.nameLong}</h2>
+          {book.chapters && (
+            <ul>
+              {book.chapters.map(chapter => (
+                <li key={chapter.id}>{chapter.reference}</li>
+              ))}
+            </ul>
+          )}
+        </article>
+      ))}
+    </div>
+  )
+}
+```
+</CodeGroup>
+
+### Error Handling
+
+Returns an empty array `[]` if the request fails. Errors are logged to the console.
+
+---
+
+## getChapter
+
+Retrieve the full content of a specific chapter, including all verses and metadata.
+
+```typescript
+getChapter(params: { 
+  bibleId: string
+  chapterId: string 
+}): Promise<Chapter | null>
+```
+
+### Parameters
+
+<ParamField path="bibleId" type="string" required>
+  The unique identifier of the Bible translation
+</ParamField>
+
+<ParamField path="chapterId" type="string" required>
+  The unique identifier of the chapter (e.g., "GEN.1", "JHN.3")
+</ParamField>
+
+### Returns
+
+<ResponseField name="Chapter" type="object | null">
+  Chapter object with full content, or null if not found
+  
+  <Expandable title="Chapter properties">
+    <ResponseField name="id" type="string" required>
+      Unique identifier for the chapter
+    </ResponseField>
+    
+    <ResponseField name="bibleId" type="string" required>
+      Bible translation ID
+    </ResponseField>
+    
+    <ResponseField name="bookId" type="string" required>
+      Book identifier
+    </ResponseField>
+    
+    <ResponseField name="number" type="string" required>
+      Chapter number
+    </ResponseField>
+    
+    <ResponseField name="reference" type="string" required>
+      Human-readable reference (e.g., "John 3")
+    </ResponseField>
+    
+    <ResponseField name="content" type="string" required>
+      HTML content of the entire chapter with all verses
+    </ResponseField>
+    
+    <ResponseField name="verseCount" type="number" required>
+      Total number of verses in the chapter
+    </ResponseField>
+    
+    <ResponseField name="copyright" type="string" required>
+      Copyright information for the translation
+    </ResponseField>
+    
+    <ResponseField name="next" type="object">
+      Information about the next chapter
+      
+      <Expandable title="properties">
+        <ResponseField name="id" type="string">
+          Next chapter ID
+        </ResponseField>
+        
+        <ResponseField name="bookId" type="string">
+          Next chapter's book ID
+        </ResponseField>
+        
+        <ResponseField name="number" type="string">
+          Next chapter number
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+    
+    <ResponseField name="previous" type="object">
+      Information about the previous chapter
+      
+      <Expandable title="properties">
+        <ResponseField name="id" type="string">
+          Previous chapter ID
+        </ResponseField>
+        
+        <ResponseField name="bookId" type="string">
+          Previous chapter's book ID
+        </ResponseField>
+        
+        <ResponseField name="number" type="string">
+          Previous chapter number
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Usage
+
+<CodeGroup>
+```typescript Client Component
+import { getChapter } from '@/actions/bible'
+import { useEffect, useState } from 'react'
+
+export default function ChapterReader({ 
+  bibleId, 
+  chapterId 
+}: { 
+  bibleId: string
+  chapterId: string 
+}) {
+  const [chapter, setChapter] = useState<Chapter | null>(null)
+  const [loading, setLoading] = useState(true)
+  
+  useEffect(() => {
+    setLoading(true)
+    getChapter({ bibleId, chapterId })
+      .then(data => {
+        setChapter(data)
+      })
+      .finally(() => setLoading(false))
+  }, [bibleId, chapterId])
+  
+  if (loading) return <div>Loading...</div>
+  if (!chapter) return <div>Chapter not found</div>
+  
+  return (
+    <article>
+      <h1>{chapter.reference}</h1>
+      <div 
+        className="chapter-content"
+        dangerouslySetInnerHTML={{ __html: chapter.content }}
+      />
+      <footer>
+        <p>{chapter.copyright}</p>
+        <div className="navigation">
+          {chapter.previous && (
+            <a href={`/bible/${bibleId}/${chapter.previous.id}`}>
+              Previous
+            </a>
+          )}
+          {chapter.next && (
+            <a href={`/bible/${bibleId}/${chapter.next.id}`}>
+              Next
+            </a>
+          )}
+        </div>
+      </footer>
+    </article>
+  )
+}
+```
+
+```typescript Server Component
+import { getChapter } from '@/actions/bible'
+import { notFound } from '@tanstack/react-router'
+
+export default async function ChapterPage({ 
+  params 
+}: { 
+  params: { bibleId: string; chapterId: string } 
+}) {
+  const chapter = await getChapter({ 
+    bibleId: params.bibleId,
+    chapterId: params.chapterId 
+  })
+  
+  if (!chapter) {
+    return notFound()
+  }
+  
+  return (
+    <main>
+      <header>
+        <h1>{chapter.reference}</h1>
+        <p>{chapter.verseCount} verses</p>
+      </header>
+      
+      <div dangerouslySetInnerHTML={{ __html: chapter.content }} />
+      
+      <footer>
+        <small>{chapter.copyright}</small>
+      </footer>
+    </main>
+  )
+}
+```
+</CodeGroup>
+
+### Error Handling
+
+Returns `null` if the chapter cannot be found or the request fails. Errors are logged to the console.
+
+<Warning>
+The `content` property contains HTML markup. Always use `dangerouslySetInnerHTML` or a safe HTML sanitizer when rendering.
+</Warning>
+
+---
+
+## searchVerse
+
+Search for verses matching a query string within a specific Bible translation.
+
+```typescript
+searchVerse(params: {
+  bibleId: string
+  query: string
+  offset: number
+}): Promise<SearchResponse>
+```
+
+### Parameters
+
+<ParamField path="bibleId" type="string" required>
+  The unique identifier of the Bible translation to search within
+</ParamField>
+
+<ParamField path="query" type="string" required>
+  The search query string. Keywords will be matched against verse text. All keywords must be present in a verse for it to match.
+</ParamField>
+
+<ParamField path="offset" type="number" required>
+  Pagination offset for results. Use 0 for the first page, 10 for the second page (with default limit), etc.
+</ParamField>
+
+### Returns
+
+<ResponseField name="SearchResponse" type="object">
+  Search results with matching verses
+  
+  <Expandable title="SearchResponse properties">
+    <ResponseField name="query" type="string" required>
+      The search query that was executed
+    </ResponseField>
+    
+    <ResponseField name="limit" type="number" required>
+      Maximum number of results per page (API default is 10)
+    </ResponseField>
+    
+    <ResponseField name="offset" type="number" required>
+      Current pagination offset
+    </ResponseField>
+    
+    <ResponseField name="total" type="number" required>
+      Total number of matching verses found
+    </ResponseField>
+    
+    <ResponseField name="verseCount" type="number" required>
+      Number of verses in the current page of results
+    </ResponseField>
+    
+    <ResponseField name="verses" type="SearchVerse[]" required>
+      Array of matching verses
+      
+      <Expandable title="SearchVerse properties">
+        <ResponseField name="id" type="string" required>
+          Unique verse identifier
+        </ResponseField>
+        
+        <ResponseField name="orgId" type="string" required>
+          Original verse ID
+        </ResponseField>
+        
+        <ResponseField name="bibleId" type="string" required>
+          Bible translation ID
+        </ResponseField>
+        
+        <ResponseField name="bookId" type="string" required>
+          Book identifier
+        </ResponseField>
+        
+        <ResponseField name="chapterId" type="string" required>
+          Chapter identifier
+        </ResponseField>
+        
+        <ResponseField name="text" type="string" required>
+          The verse text content
+        </ResponseField>
+        
+        <ResponseField name="reference" type="string">
+          Optional human-readable reference (e.g., "John 3:16")
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+    
+    <ResponseField name="passages" type="Passage[]">
+      Optional array of passage objects
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Usage
+
+<CodeGroup>
+```typescript Client Component
+import { searchVerse } from '@/actions/bible'
+import { useState } from 'react'
+
+export default function BibleSearch({ bibleId }: { bibleId: string }) {
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState<SearchResponse | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [page, setPage] = useState(0)
+  
+  const handleSearch = async (offset = 0) => {
+    if (!query.trim()) return
+    
+    setLoading(true)
+    const data = await searchVerse({ 
+      bibleId, 
+      query: query.trim(), 
+      offset 
+    })
+    setResults(data)
+    setLoading(false)
+  }
+  
+  const loadMore = () => {
+    const nextOffset = (page + 1) * 10
+    setPage(page + 1)
+    handleSearch(nextOffset)
+  }
+  
+  return (
+    <div>
+      <input
+        type="text"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Search verses..."
+      />
+      <button onClick={() => handleSearch(0)} disabled={loading}>
+        Search
+      </button>
+      
+      {results && (
+        <div>
+          <p>Found {results.total} verses</p>
+          {results.verses.map(verse => (
+            <div key={verse.id}>
+              <strong>{verse.reference}</strong>
+              <p>{verse.text}</p>
+            </div>
+          ))}
+          
+          {results.verseCount > 0 && results.total > (page + 1) * 10 && (
+            <button onClick={loadMore}>Load More</button>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+```
+
+```typescript Server Component with Search Params
+import { searchVerse } from '@/actions/bible'
+
+export default async function SearchPage({ 
+  params,
+  searchParams 
+}: { 
+  params: { bibleId: string }
+  searchParams: { q?: string; page?: string }
+}) {
+  const query = searchParams.q || ''
+  const page = parseInt(searchParams.page || '0', 10)
+  const offset = page * 10
+  
+  if (!query) {
+    return <div>Enter a search query</div>
+  }
+  
+  const results = await searchVerse({ 
+    bibleId: params.bibleId,
+    query,
+    offset 
+  })
+  
+  return (
+    <main>
+      <h1>Search Results for "{query}"</h1>
+      <p>Found {results.total} verses</p>
+      
+      <div className="results">
+        {results.verses.map(verse => (
+          <article key={verse.id}>
+            <h3>{verse.reference}</h3>
+            <p>{verse.text}</p>
+          </article>
+        ))}
+      </div>
+      
+      {/* Pagination controls */}
+      <nav>
+        {page > 0 && (
+          <a href={`?q=${query}&page=${page - 1}`}>Previous</a>
+        )}
+        {results.total > (page + 1) * 10 && (
+          <a href={`?q=${query}&page=${page + 1}`}>Next</a>
+        )}
+      </nav>
+    </main>
+  )
+}
+```
+</CodeGroup>
+
+### Error Handling
+
+Returns an empty `SearchResponse` object with the following default values if the request fails:
+
+```typescript
+{
+  query: '<original query>',
+  limit: 0,
+  offset: 0,
+  total: 0,
+  verseCount: 0,
+  verses: []
+}
+```
+
+Errors are logged to the console.
+
+### Search Tips
+
+<Tip>
+- All keywords in the query must be present in a verse for it to match
+- Order of keywords does not matter
+- Use wildcards: `*` for any character sequence, `?` for single characters
+- The API default limit is 10 results per page
+- Use the `offset` parameter to paginate through results
+</Tip>
+
+---
+
+## Type Definitions
+
+All server actions use types imported from `@/types/responses`. Key types include:
+
+- `BibleSummary` - Summary information about a Bible translation
+- `Book` - Book information with optional chapters
+- `Chapter` - Full chapter content with verses
+- `SearchResponse` - Search results with matching verses
+- `SearchVerse` - Individual verse in search results
+- `Language` - Language information
+- `ChapterSummary` - Basic chapter metadata
+
+For complete type definitions, refer to `/home/daytona/workspace/source/src/types/responses.ts:1`.

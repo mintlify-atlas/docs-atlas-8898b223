@@ -1,0 +1,499 @@
+---
+title: 'Deployment'
+description: 'Deploy Your Bible to production with this comprehensive deployment guide'
+---
+
+## Overview
+
+This guide covers deploying Your Bible to production, including environment configuration, database setup, and platform-specific instructions.
+
+## Pre-Deployment Checklist
+
+Before deploying, ensure you have:
+
+- [ ] All required API keys and credentials
+- [ ] Production database provisioned
+- [ ] Convex production deployment created
+- [ ] Redis/KV instance for production
+- [ ] Domain name (optional but recommended)
+- [ ] SSL certificate (handled by most platforms)
+- [ ] Environment variables documented
+
+## Production Environment Setup
+
+### Environment Variables
+
+Prepare your production environment variables:
+
+```env
+# API Configuration
+API_BASE_URL=https://api.scripture.api.bible/v1
+API_KEY=your_production_api_key
+
+# Better Auth
+BETTER_AUTH_SECRET=your_production_secret_here
+BETTER_AUTH_URL=https://yourdomain.com
+
+# Database
+DATABASE_URL=postgresql://user:pass@host/db?sslmode=require
+
+# GitHub OAuth (Optional)
+GITHUB_CLIENT_ID=your_github_client_id
+GITHUB_CLIENT_SECRET=your_github_client_secret
+
+# Google Gemini AI
+GEMINI_MODEL=gemini-1.5-flash
+GEMINI_API_KEY=your_gemini_api_key
+
+# Redis/KV Storage
+KV_URL=your_production_kv_url
+KV_REST_API_URL=your_kv_rest_api_url
+KV_REST_API_TOKEN=your_kv_token
+KV_REST_API_READ_ONLY_TOKEN=your_kv_read_only_token
+REDIS_URL=your_redis_url
+
+# Convex
+CONVEX_DEPLOYMENT=prod:your_deployment_name
+VITE_CONVEX_URL=https://your_prod_deployment.convex.cloud
+
+# UploadThing (Optional)
+UPLOADTHING_TOKEN=your_uploadthing_token
+```
+
+<Warning>
+  Never use development credentials in production. Generate new secrets and API keys specifically for production.
+</Warning>
+
+### Security Considerations
+
+<Steps>
+  <Step title="Generate Production Secrets">
+    Generate a new `BETTER_AUTH_SECRET` for production:
+    ```bash
+    openssl rand -base64 32
+    ```
+    Never reuse development secrets in production.
+  </Step>
+
+  <Step title="Update OAuth Callbacks">
+    Update your OAuth application callback URLs to use your production domain:
+    - GitHub: `https://yourdomain.com/api/auth/callback/github`
+  </Step>
+
+  <Step title="Configure CORS">
+    Ensure `BETTER_AUTH_URL` matches your production domain exactly.
+  </Step>
+
+  <Step title="Enable SSL">
+    Ensure your hosting platform provides SSL certificates (most do automatically).
+  </Step>
+</Steps>
+
+## Deploying to Vercel
+
+Vercel is the recommended platform for deploying Your Bible, offering seamless integration with the tech stack.
+
+### Prerequisites
+
+- Vercel account ([sign up](https://vercel.com/signup))
+- GitHub repository with your code
+- All required credentials ready
+
+### Deployment Steps
+
+<Steps>
+  <Step title="Connect GitHub Repository">
+    1. Go to [Vercel Dashboard](https://vercel.com/dashboard)
+    2. Click "Add New" → "Project"
+    3. Import your GitHub repository
+    4. Vercel will automatically detect the framework
+  </Step>
+
+  <Step title="Configure Build Settings">
+    Vercel should auto-detect the settings, but verify:
+    - **Framework Preset**: Vite
+    - **Build Command**: `pnpm build` or `npm run build`
+    - **Output Directory**: `.output` (TanStack Start default)
+    - **Install Command**: `pnpm install` or `npm install`
+  </Step>
+
+  <Step title="Add Environment Variables">
+    In the project settings, add all environment variables from your `.env` file:
+    
+    1. Go to Settings → Environment Variables
+    2. Add each variable from the production environment list above
+    3. Set them for "Production" environment
+    4. Remember to update `BETTER_AUTH_URL` to your Vercel domain
+  </Step>
+
+  <Step title="Deploy">
+    Click "Deploy" and wait for the build to complete. Vercel will:
+    - Install dependencies
+    - Build your application
+    - Deploy to a production URL
+    - Provide a deployment URL
+  </Step>
+
+  <Step title="Configure Custom Domain (Optional)">
+    1. Go to Settings → Domains
+    2. Add your custom domain
+    3. Update DNS records as instructed
+    4. Update `BETTER_AUTH_URL` to use your custom domain
+    5. Redeploy the application
+  </Step>
+</Steps>
+
+### Vercel-Specific Services
+
+#### Vercel Postgres
+
+<Steps>
+  <Step title="Create Database">
+    1. Go to Storage tab in Vercel dashboard
+    2. Create a new Postgres database
+    3. Copy the `DATABASE_URL` connection string
+  </Step>
+
+  <Step title="Link to Project">
+    Connect the database to your project through the Vercel dashboard.
+  </Step>
+
+  <Step title="Update Environment Variables">
+    The `DATABASE_URL` will be automatically added to your project's environment variables.
+  </Step>
+</Steps>
+
+#### Vercel KV (Redis)
+
+<Steps>
+  <Step title="Create KV Database">
+    1. Go to Storage tab in Vercel dashboard
+    2. Create a new KV database
+    3. Vercel will automatically add the required environment variables
+  </Step>
+
+  <Step title="Link to Project">
+    Connect the KV database to your project for automatic environment variable injection.
+  </Step>
+</Steps>
+
+<Tip>
+  Using Vercel Postgres and Vercel KV simplifies deployment by automatically managing connection strings and credentials.
+</Tip>
+
+## Deploying to Netlify
+
+Netlify is another excellent option for deploying Your Bible.
+
+<Steps>
+  <Step title="Connect Repository">
+    1. Go to [Netlify Dashboard](https://app.netlify.com/)
+    2. Click "Add new site" → "Import an existing project"
+    3. Connect your GitHub repository
+  </Step>
+
+  <Step title="Configure Build Settings">
+    - **Build command**: `pnpm build` or `npm run build`
+    - **Publish directory**: `.output/public`
+    - **Functions directory**: `.output/server`
+  </Step>
+
+  <Step title="Add Environment Variables">
+    In Site settings → Environment variables, add all production environment variables.
+  </Step>
+
+  <Step title="Deploy">
+    Click "Deploy site" to start the deployment process.
+  </Step>
+</Steps>
+
+<Note>
+  For Netlify, you'll need to set up external services for PostgreSQL and Redis since Netlify doesn't provide these natively.
+</Note>
+
+## Database Migrations
+
+Better Auth and Drizzle ORM handle database schema automatically, but follow these steps for production:
+
+<Steps>
+  <Step title="Backup Existing Data">
+    If you have existing data, create a backup before deployment:
+    ```bash
+    pg_dump $DATABASE_URL > backup.sql
+    ```
+  </Step>
+
+  <Step title="Run Initial Migration">
+    On first deployment, Better Auth will automatically create required tables:
+    - `users`
+    - `sessions`
+    - `accounts`
+    - `verificationTokens`
+  </Step>
+
+  <Step title="Verify Tables">
+    Connect to your database and verify all tables were created:
+    ```sql
+    \dt -- List all tables
+    ```
+  </Step>
+</Steps>
+
+<Warning>
+  Always test migrations in a staging environment before applying them to production.
+</Warning>
+
+## Convex Production Deployment
+
+Deploy your Convex schema to production:
+
+<Steps>
+  <Step title="Deploy Schema">
+    Deploy your Convex schema to production:
+    ```bash
+    npx convex deploy --prod
+    ```
+  </Step>
+
+  <Step title="Get Production URL">
+    Copy the production Convex URL provided after deployment.
+  </Step>
+
+  <Step title="Update Environment Variables">
+    Add the production Convex variables to your hosting platform:
+    ```env
+    CONVEX_DEPLOYMENT=prod:your_deployment_name
+    VITE_CONVEX_URL=https://your_prod_deployment.convex.cloud
+    ```
+  </Step>
+
+  <Step title="Verify Deployment">
+    Check the [Convex Dashboard](https://dashboard.convex.dev/) to ensure:
+    - Schema is deployed correctly
+    - All tables are present
+    - Indexes are created
+  </Step>
+</Steps>
+
+## Post-Deployment Checklist
+
+After deployment, verify everything is working:
+
+### Functionality Tests
+
+- [ ] **Homepage loads correctly**
+  - Navigate to your production URL
+  - Verify the homepage renders without errors
+
+- [ ] **Authentication works**
+  - Test sign up with a new account
+  - Test sign in with existing credentials
+  - Verify session persistence after page reload
+  - Test sign out functionality
+
+- [ ] **Bible reading functionality**
+  - Select a Bible translation
+  - Navigate between chapters
+  - Verify verse highlighting works
+  - Check that chapter text loads correctly
+
+- [ ] **Search functionality**
+  - Perform a keyword search
+  - Verify results display correctly
+  - Test pagination
+  - Check verse reference links
+
+- [ ] **Collections work**
+  - Create a new collection
+  - Add verses to collection
+  - Edit collection name
+  - Delete collection
+  - Verify real-time sync (open in two tabs)
+
+- [ ] **Notes functionality**
+  - Create a note for a chapter
+  - Edit existing notes
+  - Verify rich text formatting
+  - Check real-time sync
+
+- [ ] **Story generation**
+  - Generate a new story
+  - Verify AI response
+  - Check rate limiting works
+  - Confirm stories are saved
+
+### Performance Tests
+
+- [ ] **Page load times** are acceptable
+- [ ] **API responses** are fast
+- [ ] **Real-time updates** sync quickly
+- [ ] **Mobile responsiveness** works well
+
+### Security Tests
+
+- [ ] **SSL certificate** is active and valid
+- [ ] **Protected routes** require authentication
+- [ ] **Rate limiting** prevents abuse
+- [ ] **CORS** is properly configured
+- [ ] **Environment variables** are not exposed
+
+## Monitoring and Maintenance
+
+### Setting Up Monitoring
+
+<Steps>
+  <Step title="Enable Platform Analytics">
+    - **Vercel**: Analytics is available in the dashboard
+    - **Netlify**: Enable analytics in site settings
+  </Step>
+
+  <Step title="Monitor Error Logs">
+    Regularly check logs for errors:
+    - Vercel: Functions → Logs
+    - Netlify: Functions → Logs
+    - Convex: Dashboard → Logs
+  </Step>
+
+  <Step title="Set Up Alerts">
+    Configure alerts for:
+    - Deployment failures
+    - High error rates
+    - Performance degradation
+  </Step>
+</Steps>
+
+### Regular Maintenance
+
+1. **Update Dependencies**: Regularly update npm packages for security patches
+2. **Monitor API Usage**: Check API usage to avoid unexpected costs
+3. **Review Logs**: Regularly review application logs for errors
+4. **Backup Data**: Implement regular database backups
+5. **Test Functionality**: Periodically test all features
+
+### Performance Optimization
+
+<Steps>
+  <Step title="Enable Caching">
+    Configure appropriate caching headers for static assets.
+  </Step>
+
+  <Step title="Optimize Images">
+    Ensure all images are optimized and properly sized.
+  </Step>
+
+  <Step title="Monitor Bundle Size">
+    Keep an eye on JavaScript bundle sizes and optimize when needed.
+  </Step>
+
+  <Step title="Use CDN">
+    Leverage CDN for static assets (automatic with Vercel/Netlify).
+  </Step>
+</Steps>
+
+## Troubleshooting Deployment Issues
+
+### Build Failures
+
+If the build fails:
+
+1. **Check build logs** for specific error messages
+2. **Verify dependencies** are correctly specified in `package.json`
+3. **Test build locally**:
+   ```bash
+   pnpm build
+   ```
+4. **Check Node.js version** matches your development environment
+
+### Environment Variable Issues
+
+If environment variables aren't working:
+
+1. **Verify all required variables** are set
+2. **Check variable names** for typos
+3. **Ensure no trailing spaces** in values
+4. **Redeploy** after adding/updating variables
+
+### Database Connection Errors
+
+If database connection fails:
+
+1. **Verify `DATABASE_URL`** is correct
+2. **Check SSL mode** is enabled
+3. **Ensure database** allows connections from your hosting platform
+4. **Test connection** using a database client
+
+### Authentication Issues
+
+If authentication doesn't work:
+
+1. **Verify `BETTER_AUTH_URL`** matches your domain
+2. **Check `BETTER_AUTH_SECRET`** is set
+3. **Ensure OAuth callbacks** are correctly configured
+4. **Test locally** with production environment variables
+
+### Convex Connection Issues
+
+If Convex data doesn't sync:
+
+1. **Verify `VITE_CONVEX_URL`** is correct
+2. **Check Convex deployment** status in dashboard
+3. **Ensure schema** is deployed to production
+4. **Review Convex logs** for errors
+
+## Rollback Procedures
+
+If something goes wrong:
+
+### Vercel Rollback
+
+1. Go to Deployments tab
+2. Find the last working deployment
+3. Click "⋯" → "Promote to Production"
+
+### Netlify Rollback
+
+1. Go to Deploys tab
+2. Find the last successful deployment
+3. Click "Publish deploy"
+
+### Database Rollback
+
+If you need to restore the database:
+
+```bash
+psql $DATABASE_URL < backup.sql
+```
+
+<Warning>
+  Always test rollback procedures in a staging environment first.
+</Warning>
+
+## Continuous Deployment
+
+Both Vercel and Netlify support automatic deployments:
+
+- **Production**: Deploys automatically on push to `main` branch
+- **Preview**: Creates preview deployments for pull requests
+- **Branch Deploys**: Optionally deploy other branches
+
+<Tip>
+  Use preview deployments to test changes before merging to production.
+</Tip>
+
+## Cost Management
+
+Monitor costs for external services:
+
+- **API.Bible**: 1,000 free requests/day, monitor usage
+- **Google Gemini**: Free tier limits, implement rate limiting
+- **Database**: Monitor storage and connection usage
+- **Redis**: Track memory usage and connection count
+- **Hosting**: Most platforms have free tiers for small projects
+
+## Additional Resources
+
+- [Vercel Documentation](https://vercel.com/docs)
+- [Netlify Documentation](https://docs.netlify.com/)
+- [Convex Production Best Practices](https://docs.convex.dev/production)
+- [Better Auth Production Guide](https://better-auth.com/docs/production)
+- [TanStack Start Deployment Guide](https://tanstack.com/start/latest/docs/deployment)

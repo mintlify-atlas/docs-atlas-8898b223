@@ -1,0 +1,578 @@
+---
+title: Local Development Setup
+description: Complete guide to setting up Your Bible for local development
+---
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+<CardGroup cols={2}>
+  <Card title="Node.js" icon="node-js">
+    Version 18 or higher required
+    
+    ```bash
+    node --version
+    ```
+  </Card>
+  
+  <Card title="pnpm" icon="box">
+    Recommended package manager
+    
+    ```bash
+    npm install -g pnpm
+    ```
+  </Card>
+  
+  <Card title="Git" icon="git">
+    Version control system
+    
+    ```bash
+    git --version
+    ```
+  </Card>
+  
+  <Card title="Code Editor" icon="code">
+    VS Code recommended with TypeScript support
+  </Card>
+</CardGroup>
+
+## Installation Steps
+
+<Steps>
+  <Step title="Clone the Repository">
+    Clone the repository to your local machine:
+    
+    ```bash
+    git clone <repository-url>
+    cd your-bible
+    ```
+    
+    Or if you've forked it:
+    
+    ```bash
+    git clone https://github.com/YOUR_USERNAME/your-bible.git
+    cd your-bible
+    ```
+  </Step>
+
+  <Step title="Install Dependencies">
+    Install all project dependencies using pnpm:
+    
+    ```bash
+    pnpm install
+    ```
+    
+    <Info>
+      First installation may take a few minutes as it downloads all packages and dependencies.
+    </Info>
+    
+    Alternative package managers:
+    
+    <CodeGroup>
+    ```bash npm
+    npm install
+    ```
+    
+    ```bash yarn
+    yarn install
+    ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Environment Configuration">
+    Copy the example environment file:
+    
+    ```bash
+    cp .env.example .env
+    ```
+    
+    Now you'll need to configure each environment variable. See the detailed [Environment Variables](/development/environment-variables) guide for complete information.
+  </Step>
+</Steps>
+
+## Service Configuration
+
+### 1. API.Bible Setup
+
+<Steps>
+  <Step title="Get API Key">
+    1. Visit [API.Bible](https://scripture.api.bible/)
+    2. Sign up for a free account
+    3. Navigate to "API Keys" section
+    4. Create a new API key
+  </Step>
+  
+  <Step title="Configure Environment">
+    Add to your `.env` file:
+    
+    ```bash
+    API_BASE_URL=https://api.scripture.api.bible/v1
+    API_KEY=your_api_bible_key_here
+    ```
+  </Step>
+</Steps>
+
+### 2. Convex Backend Setup
+
+<Info>
+  Convex provides real-time database and backend functionality for collections, notes, and stories.
+</Info>
+
+<Steps>
+  <Step title="Create Convex Account">
+    1. Visit [Convex.dev](https://convex.dev/)
+    2. Sign up with GitHub or email
+    3. Create a new project
+  </Step>
+  
+  <Step title="Install Convex CLI">
+    ```bash
+    pnpm add -g convex
+    ```
+  </Step>
+  
+  <Step title="Initialize Convex">
+    Run the Convex development server:
+    
+    ```bash
+    npx convex dev
+    ```
+    
+    This will:
+    - Log you in (if first time)
+    - Create/link a project
+    - Deploy your schema
+    - Generate environment variables
+  </Step>
+  
+  <Step title="Configure Environment">
+    Convex will automatically add these to your `.env`:
+    
+    ```bash
+    CONVEX_DEPLOYMENT=your_deployment_name
+    VITE_CONVEX_URL=https://your-project.convex.cloud
+    ```
+  </Step>
+</Steps>
+
+### 3. PostgreSQL Database Setup
+
+<Tabs>
+  <Tab title="Using Neon (Recommended)">
+    <Steps>
+      <Step title="Create Neon Account">
+        1. Visit [Neon.tech](https://neon.tech/)
+        2. Sign up for a free account
+        3. Create a new project
+      </Step>
+      
+      <Step title="Get Connection String">
+        1. Go to your project dashboard
+        2. Copy the connection string
+        3. It should look like: `postgresql://user:password@host/database`
+      </Step>
+      
+      <Step title="Configure Environment">
+        ```bash
+        DATABASE_URL=postgresql://user:password@ep-xxx.region.neon.tech/dbname?sslmode=require
+        ```
+      </Step>
+      
+      <Step title="Run Migrations">
+        ```bash
+        pnpm drizzle-kit push
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+  
+  <Tab title="Using Local PostgreSQL">
+    <Steps>
+      <Step title="Install PostgreSQL">
+        - **macOS**: `brew install postgresql`
+        - **Ubuntu**: `sudo apt-get install postgresql`
+        - **Windows**: Download from [postgresql.org](https://www.postgresql.org/download/)
+      </Step>
+      
+      <Step title="Start PostgreSQL">
+        ```bash
+        # macOS/Linux
+        brew services start postgresql
+        # or
+        sudo service postgresql start
+        ```
+      </Step>
+      
+      <Step title="Create Database">
+        ```bash
+        createdb yourbible
+        ```
+      </Step>
+      
+      <Step title="Configure Environment">
+        ```bash
+        DATABASE_URL=postgresql://localhost/yourbible
+        ```
+      </Step>
+      
+      <Step title="Run Migrations">
+        ```bash
+        pnpm drizzle-kit push
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+### 4. Better Auth Configuration
+
+<Steps>
+  <Step title="Generate Auth Secret">
+    Generate a secure random string for your auth secret:
+    
+    ```bash
+    openssl rand -base64 32
+    ```
+  </Step>
+  
+  <Step title="Configure Environment">
+    ```bash
+    BETTER_AUTH_SECRET=your_generated_secret_here
+    BETTER_AUTH_URL=http://localhost:5173
+    ```
+  </Step>
+  
+  <Step title="Optional: GitHub OAuth">
+    If you want to enable GitHub authentication:
+    
+    1. Go to GitHub Settings > Developer settings > OAuth Apps
+    2. Create a new OAuth App
+    3. Set authorization callback URL: `http://localhost:5173/api/auth/callback/github`
+    4. Add to `.env`:
+    
+    ```bash
+    GITHUB_CLIENT_ID=your_github_client_id
+    GITHUB_CLIENT_SECRET=your_github_client_secret
+    ```
+  </Step>
+</Steps>
+
+### 5. Google Gemini AI Setup
+
+<Steps>
+  <Step title="Get Gemini API Key">
+    1. Visit [Google AI Studio](https://ai.google.dev/)
+    2. Sign in with your Google account
+    3. Click "Get API Key"
+    4. Create a new API key
+  </Step>
+  
+  <Step title="Configure Environment">
+    ```bash
+    GEMINI_MODEL=gemini-1.5-flash
+    GEMINI_API_KEY=your_gemini_api_key_here
+    ```
+    
+    <Info>
+      `gemini-1.5-flash` is recommended for its balance of speed and quality. You can also use `gemini-1.5-pro` for better quality at higher cost.
+    </Info>
+  </Step>
+</Steps>
+
+### 6. Redis/Upstash Setup
+
+<Info>
+  Redis is used for rate limiting story generation to manage API costs (5 stories per day per user).
+</Info>
+
+<Steps>
+  <Step title="Create Upstash Account">
+    1. Visit [Upstash](https://upstash.com/)
+    2. Sign up for a free account
+    3. Create a new Redis database
+  </Step>
+  
+  <Step title="Get Connection Details">
+    From your Upstash dashboard:
+    1. Click on your database
+    2. Go to "REST API" section
+    3. Copy the connection details
+  </Step>
+  
+  <Step title="Configure Environment">
+    ```bash
+    REDIS_URL=your_redis_url_here
+    KV_URL=your_kv_url_here
+    KV_REST_API_URL=your_kv_rest_api_url_here
+    KV_REST_API_TOKEN=your_kv_rest_api_token_here
+    KV_REST_API_READ_ONLY_TOKEN=your_kv_rest_api_read_only_token_here
+    ```
+  </Step>
+</Steps>
+
+### 7. Optional: UploadThing (Future Feature)
+
+<Accordion title="UploadThing Configuration">
+  If you plan to implement file upload features:
+  
+  1. Visit [UploadThing](https://uploadthing.com/)
+  2. Create an account and project
+  3. Get your token from the dashboard
+  4. Add to `.env`:
+  
+  ```bash
+  UPLOADTHING_TOKEN=your_uploadthing_token_here
+  ```
+</Accordion>
+
+## Running the Development Server
+
+<Steps>
+  <Step title="Start Convex">
+    In one terminal, run Convex in development mode:
+    
+    ```bash
+    npx convex dev
+    ```
+    
+    Keep this terminal running. It will:
+    - Watch for schema changes
+    - Hot reload functions
+    - Provide real-time sync
+  </Step>
+  
+  <Step title="Start Development Server">
+    In another terminal, start the Vite development server:
+    
+    ```bash
+    pnpm dev
+    ```
+    
+    The application will be available at:
+    ```
+    http://localhost:5173
+    ```
+  </Step>
+</Steps>
+
+<Info>
+  The development server includes:
+  - Hot Module Replacement (HMR)
+  - Fast refresh for React components
+  - TypeScript checking
+  - Automatic route generation
+</Info>
+
+## Verification Steps
+
+<AccordionGroup>
+  <Accordion title="1. Check Application Loads">
+    Open http://localhost:5173 and verify:
+    - Page loads without errors
+    - No console errors in browser DevTools
+    - Navigation works
+  </Accordion>
+  
+  <Accordion title="2. Test API.Bible Connection">
+    - Select a Bible translation from dropdown
+    - Navigate to Genesis chapter 1
+    - Verify verses load correctly
+  </Accordion>
+  
+  <Accordion title="3. Test Authentication">
+    - Click "Sign In"
+    - Create a new account with email
+    - Verify successful sign-in
+    - Check that protected routes are now accessible
+  </Accordion>
+  
+  <Accordion title="4. Test Convex Integration">
+    - Create a new collection
+    - Add a verse to the collection
+    - Verify data persists after page refresh
+  </Accordion>
+  
+  <Accordion title="5. Test AI Story Generation">
+    - Navigate to Stories section
+    - Create a new story
+    - Fill in all required fields
+    - Generate a story
+    - Verify story appears correctly
+  </Accordion>
+</AccordionGroup>
+
+## Common Issues and Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Port Already in Use">
+    If port 5173 is already in use:
+    
+    ```bash
+    # Find and kill the process using port 5173
+    lsof -ti:5173 | xargs kill -9
+    
+    # Or specify a different port
+    pnpm dev --port 3000
+    ```
+  </Accordion>
+  
+  <Accordion title="Convex Connection Issues">
+    If Convex fails to connect:
+    
+    1. Verify `VITE_CONVEX_URL` is set correctly
+    2. Check Convex dashboard for deployment status
+    3. Try restarting `npx convex dev`
+    4. Clear browser cache and reload
+  </Accordion>
+  
+  <Accordion title="API.Bible Not Loading">
+    If Bible content fails to load:
+    
+    1. Verify `API_KEY` is valid
+    2. Check API key hasn't expired
+    3. Verify `API_BASE_URL` is correct: `https://api.scripture.api.bible/v1`
+    4. Check browser console for specific error messages
+    5. Verify API key has necessary permissions
+  </Accordion>
+  
+  <Accordion title="Database Connection Errors">
+    If you see database connection errors:
+    
+    ```bash
+    # Verify PostgreSQL is running
+    pg_isready
+    
+    # Check connection string format
+    echo $DATABASE_URL
+    
+    # Test connection with psql
+    psql $DATABASE_URL
+    
+    # Retry migrations
+    pnpm drizzle-kit push
+    ```
+  </Accordion>
+  
+  <Accordion title="Authentication Not Working">
+    If sign-in/sign-up fails:
+    
+    1. Verify `BETTER_AUTH_SECRET` is set
+    2. Check `BETTER_AUTH_URL` matches your dev server URL
+    3. Verify database migrations ran successfully
+    4. Clear cookies and try again
+    5. Check browser console for errors
+  </Accordion>
+  
+  <Accordion title="Story Generation Failing">
+    If AI story generation fails:
+    
+    1. Verify `GEMINI_API_KEY` is valid
+    2. Check API key has necessary permissions
+    3. Verify Redis is connected (for rate limiting)
+    4. Check browser console and server logs
+    5. Ensure you haven't exceeded rate limit (5 stories/day)
+  </Accordion>
+  
+  <Accordion title="Rate Limiting Issues">
+    If rate limiting isn't working:
+    
+    1. Verify all Redis environment variables are set
+    2. Test Redis connection in Upstash dashboard
+    3. Check `KV_REST_API_TOKEN` is valid
+    4. Restart development server
+  </Accordion>
+  
+  <Accordion title="TypeScript Errors">
+    If you see TypeScript errors:
+    
+    ```bash
+    # Restart TypeScript server in VS Code
+    # Command Palette: TypeScript: Restart TS Server
+    
+    # Clear TypeScript cache
+    rm -rf node_modules/.vite
+    
+    # Reinstall dependencies
+    rm -rf node_modules pnpm-lock.yaml
+    pnpm install
+    ```
+  </Accordion>
+  
+  <Accordion title="Module Not Found Errors">
+    If you see "Cannot find module" errors:
+    
+    1. Verify all dependencies are installed: `pnpm install`
+    2. Check `tsconfig.json` paths are configured
+    3. Restart development server
+    4. Clear Vite cache: `rm -rf node_modules/.vite`
+  </Accordion>
+</AccordionGroup>
+
+## Development Tools
+
+### Recommended VS Code Extensions
+
+- **ES7+ React/Redux/React-Native snippets**: React snippets
+- **Tailwind CSS IntelliSense**: Tailwind autocompletion
+- **TypeScript**: Built-in, ensure it's enabled
+- **ESLint**: Code linting
+- **Prettier**: Code formatting
+- **Error Lens**: Inline error display
+
+### Browser DevTools
+
+- **React Developer Tools**: Inspect React component tree
+- **TanStack Query Devtools**: Built into the app (bottom left corner in dev mode)
+- **Network Tab**: Monitor API requests
+- **Console**: Check for errors and warnings
+
+## Build and Production Testing
+
+### Building for Production
+
+```bash
+pnpm build
+```
+
+This creates an optimized production build in the `dist` directory.
+
+### Testing Production Build Locally
+
+```bash
+# Build the application
+pnpm build
+
+# Preview the production build
+pnpm preview
+```
+
+The production preview will be available at http://localhost:4173
+
+### Production Checklist
+
+<Accordion title="Before Deploying">
+  - [ ] All tests pass
+  - [ ] No console errors or warnings
+  - [ ] Build completes without errors
+  - [ ] Environment variables are properly configured for production
+  - [ ] API keys are valid and have proper rate limits
+  - [ ] Database migrations are up to date
+  - [ ] Authentication works correctly
+  - [ ] All features tested on production build
+  - [ ] Mobile responsiveness verified
+  - [ ] Performance is acceptable (check Lighthouse scores)
+</Accordion>
+
+## Next Steps
+
+Now that your local environment is set up:
+
+1. Read the [Project Structure](/development/project-structure) guide to understand the codebase
+2. Review the [Database Schema](/development/database-schema) documentation
+3. Explore the [Integrations](/development/integrations) to understand external services
+4. Check the [Contributing Guide](/development/contributing) before making changes
+
+<Card title="Ready to Contribute?" icon="code-pull-request" href="/development/contributing">
+  Learn how to contribute code, documentation, and improvements to Your Bible.
+</Card>

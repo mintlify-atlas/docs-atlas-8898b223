@@ -1,0 +1,147 @@
+---
+title: Collection Components
+description: Components for managing and displaying verse collections
+---
+
+Collection components enable users to organize and manage saved Bible verses into collections.
+
+## CollectionVerseCard
+
+Displays a single verse within a collection with options to view or remove it.
+
+### Props
+
+<ParamField path="_id" type="Id<'collectionVerses'>" required>
+  The unique identifier for this collection verse entry
+</ParamField>
+
+<ParamField path="_creationTime" type="number" required>
+  Unix timestamp of when this verse was added to the collection
+</ParamField>
+
+<ParamField path="verseId" type="string" required>
+  The Bible verse reference (e.g., "GEN.1.1")
+</ParamField>
+
+<ParamField path="bibleId" type="string" required>
+  The Bible translation ID
+</ParamField>
+
+<ParamField path="chapterId" type="string" required>
+  The chapter ID where this verse is located
+</ParamField>
+
+<ParamField path="verseText" type="string" required>
+  The actual text content of the verse
+</ParamField>
+
+<ParamField path="collectionId" type="Id<'collections'>" required>
+  The ID of the collection this verse belongs to
+</ParamField>
+
+<ParamField path="userId" type="string" required>
+  The ID of the user who owns this collection
+</ParamField>
+
+### Usage Example
+
+```tsx
+import CollectionVerseCard from '@/components/collections/collection-verse-card'
+
+<CollectionVerseCard
+  _id={verseCollectionId}
+  _creationTime={1234567890}
+  verseId="GEN.1.1"
+  bibleId="KJV"
+  chapterId="GEN.1"
+  verseText="In the beginning God created the heaven and the earth."
+  collectionId={collectionId}
+  userId="user_123"
+/>
+```
+
+### Features
+
+- Hover effect with accent background
+- Click to navigate to verse in Bible
+- Delete button appears on hover
+- Displays verse text and reference
+- Responsive design with proper spacing
+
+<Note>
+  The card includes a link to view the verse in context within the Bible reader, preserving the Bible translation, chapter, and verse parameters.
+</Note>
+
+---
+
+## AddToCollectionDialog
+
+A dialog component for adding a verse to one or more collections.
+
+### Props
+
+<ParamField path="verseText" type="string" required>
+  The text content of the verse to be added
+</ParamField>
+
+<ParamField path="verseId" type="string" required>
+  The Bible verse reference
+</ParamField>
+
+<ParamField path="chapterId" type="string" required>
+  The chapter ID containing the verse
+</ParamField>
+
+<ParamField path="bibleId" type="string" required>
+  The Bible translation ID
+</ParamField>
+
+<ParamField path="trigger" type="React.ReactNode" required>
+  The element that opens the dialog when clicked
+</ParamField>
+
+### Usage Example
+
+```tsx
+import AddToCollectionDialog from '@/components/bible/add-to-collection-dialog'
+import { Button } from '@/components/ui/button'
+
+<AddToCollectionDialog
+  verseText="For God so loved the world..."
+  verseId="JHN.3.16"
+  chapterId="JHN.3"
+  bibleId="KJV"
+  trigger={<Button>Add to Collection</Button>}
+/>
+```
+
+### Features
+
+- Displays all available collections for the user
+- Loading states during fetch and save operations
+- Scrollable list for many collections
+- Individual loading indicators per collection
+- Empty state when no collections exist
+- Automatic dialog close after selection
+
+<Note>
+  Users must create at least one collection before they can add verses. The dialog will display a helpful message if no collections are found.
+</Note>
+
+---
+
+## Additional Collection Components
+
+The collections directory also includes utility components:
+
+### DeleteVerseCollectionBtn
+
+Button for removing a verse from a collection.
+
+### DeleteCollectionsBtn
+
+Button for deleting an entire collection.
+
+### CollectionsBtn
+
+Navigational button or link to view all collections.

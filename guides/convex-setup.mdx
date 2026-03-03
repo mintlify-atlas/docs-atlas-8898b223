@@ -1,0 +1,442 @@
+---
+title: 'Convex Setup'
+description: 'Complete guide to setting up Convex for real-time data synchronization in Your Bible'
+---
+
+## What is Convex?
+
+[Convex](https://convex.dev/) is a real-time backend platform that provides:
+
+- **Real-time Synchronization**: Automatic data sync across all clients
+- **Type Safety**: End-to-end TypeScript support
+- **Serverless Functions**: Built-in backend logic execution
+- **Automatic Caching**: Optimized data fetching
+- **Live Queries**: Data updates automatically without polling
+
+## Why Convex for Your Bible?
+
+Your Bible uses Convex to manage:
+
+1. **Personal Collections**: Save and organize favorite Bible verses
+2. **Chapter Notes**: Create and edit notes with real-time sync
+3. **AI-Generated Stories**: Store and manage generated stories
+4. **Real-time Updates**: Changes sync instantly across devices
+
+<Note>
+  While user authentication data is stored in PostgreSQL via Better Auth, all user-generated content (collections, notes, stories) is stored in Convex for optimal real-time performance.
+</Note>
+
+## Creating a Convex Account
+
+<Steps>
+  <Step title="Sign Up for Convex">
+    Visit [convex.dev](https://convex.dev/) and sign up using GitHub or Google authentication.
+  </Step>
+
+  <Step title="Install Convex CLI">
+    Install the Convex CLI globally:
+    <CodeGroup>
+    ```bash npm
+    npm install -g convex
+    ```
+
+    ```bash pnpm
+    pnpm add -g convex
+    ```
+
+    ```bash yarn
+    yarn global add convex
+    ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Login to Convex">
+    Authenticate the CLI with your account:
+    ```bash
+    npx convex login
+    ```
+    This will open a browser window to complete authentication.
+  </Step>
+</Steps>
+
+## Project Setup
+
+<Steps>
+  <Step title="Initialize Convex">
+    In your project directory, initialize Convex:
+    ```bash
+    npx convex dev
+    ```
+    This command will:
+    - Create a new Convex project (or link to an existing one)
+    - Generate a `convex/` directory if it doesn't exist
+    - Deploy your schema to Convex
+    - Start the development sync
+  </Step>
+
+  <Step title="Select or Create Project">
+    The CLI will prompt you to either:
+    - Create a new Convex project
+    - Link to an existing project
+    
+    Choose "Create a new project" for a fresh setup.
+  </Step>
+
+  <Step title="Copy Environment Variables">
+    After setup, Convex will provide environment variables. Add them to your `.env` file:
+    ```env
+    CONVEX_DEPLOYMENT=your_convex_deployment_name
+    VITE_CONVEX_URL=https://your_deployment.convex.cloud
+    ```
+  </Step>
+</Steps>
+
+<Tip>
+  Keep the `npx convex dev` command running during development. It watches for schema changes and automatically deploys them.
+</Tip>
+
+## Database Schema
+
+Your Bible uses the following Convex schema defined in `convex/schema.ts`:
+
+```typescript
+import { defineSchema, defineTable } from "convex/server";
+import { v } from "convex/values";
+
+export default defineSchema({
+  collections: defineTable({
+    name: v.string(),
+    userId: v.string(),
+  }),
+  collectionVerses: defineTable({
+    bibleId: v.string(),
+    verseId: v.string(),
+    chapterId: v.string(),
+    verseText: v.string(),
+    collectionId: v.id("collections"),
+  }).index("by_collection_id", ["collectionId"]),
+  notes: defineTable({
+    chapterId: v.string(),
+    content: v.string(),
+    userId: v.string(),
+  }).index("by_chapter_id", ["chapterId"]),
+  stories: defineTable({
+    title: v.string(),
+    bibleId: v.string(),
+    chapterId: v.string(),
+    chapterReference: v.string(),
+    userId: v.string(),
+    perspective: v.string(),
+    setting: v.string(),
+    tone: v.string(),
+    storyLength: v.string(),
+    story: v.string(),
+  }).index("by_user_id", ["userId"]),
+});
+```
+
+### Schema Breakdown
+
+#### Collections Table
+
+Stores user-created verse collections:
+
+- **name**: Collection name (e.g., "Favorite Psalms")
+- **userId**: ID of the user who created the collection
+
+#### CollectionVerses Table
+
+Stores individual verses within collections:
+
+- **bibleId**: Bible translation ID
+- **verseId**: Unique verse identifier
+- **chapterId**: Chapter identifier
+- **verseText**: The actual verse text
+- **collectionId**: Reference to parent collection
+- **Index**: `by_collection_id` for efficient verse lookups
+
+#### Notes Table
+
+Stores user notes for Bible chapters:
+
+- **chapterId**: Chapter this note belongs to
+- **content**: Rich text content of the note
+- **userId**: ID of the user who created the note
+- **Index**: `by_chapter_id` for efficient note retrieval
+
+#### Stories Table
+
+Stores AI-generated stories:
+
+- **title**: Story title
+- **bibleId**: Source Bible translation
+- **chapterId**: Source chapter
+- **chapterReference**: Human-readable reference (e.g., "John 3")
+- **userId**: ID of the user who created the story
+- **perspective**: Narrative perspective used
+- **setting**: Story setting description
+- **tone**: Emotional tone of the story
+- **storyLength**: Length specification (short/medium/long)
+- **story**: The generated story content
+- **Index**: `by_user_id` for efficient user story lookups
+
+<Note>
+  Indexes are crucial for query performance. The schema uses indexes to optimize common queries like fetching all verses in a collection or all stories by a user.
+</Note>
+
+## Deploying Schema Changes
+
+When you modify the schema in `convex/schema.ts`:
+
+### During Development
+
+1. Save your changes to `convex/schema.ts`
+2. The `convex dev` process automatically detects changes
+3. Schema is deployed to your development environment
+4. Changes are immediately available
+
+<Warning>
+  Schema changes that modify existing table structures may require data migration. Convex will warn you about breaking changes.
+</Warning>
+
+### For Production
+
+<Steps>
+  <Step title="Deploy to Production">
+    Deploy your schema to production:
+    ```bash
+    npx convex deploy --prod
+    ```
+  </Step>
+
+  <Step title="Update Environment Variables">
+    Use the production Convex URL in your production environment:
+    ```env
+    CONVEX_DEPLOYMENT=prod:your_deployment_name
+    VITE_CONVEX_URL=https://your_prod_deployment.convex.cloud
+    ```
+  </Step>
+
+  <Step title="Verify Deployment">
+    Check the Convex dashboard to confirm the schema is deployed correctly.
+  </Step>
+</Steps>
+
+## Real-Time Data Sync
+
+Convex automatically synchronizes data across all connected clients in real-time.
+
+### How It Works
+
+1. **Client Subscribes**: Component queries data using Convex hooks
+2. **Data Updates**: When data changes on the server
+3. **Automatic Sync**: All subscribed clients receive updates instantly
+4. **UI Updates**: React components re-render with new data
+
+### Example: Querying Collections
+
+```tsx
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
+
+function Collections() {
+  const collections = useQuery(api.collections.list, { 
+    userId: currentUser.id 
+  });
+
+  if (!collections) return <div>Loading...</div>;
+
+  return (
+    <div>
+      {collections.map((collection) => (
+        <div key={collection._id}>{collection.name}</div>
+      ))}
+    </div>
+  );
+}
+```
+
+### Example: Creating a Collection
+
+```tsx
+import { useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
+
+function CreateCollection() {
+  const createCollection = useMutation(api.collections.create);
+
+  const handleCreate = async (name: string) => {
+    await createCollection({ 
+      name, 
+      userId: currentUser.id 
+    });
+  };
+
+  return <button onClick={() => handleCreate("New Collection")}>Create</button>;
+}
+```
+
+<Tip>
+  Convex queries are cached and deduplicated automatically. Multiple components can query the same data without making redundant requests.
+</Tip>
+
+## Development Workflow
+
+### Daily Development
+
+1. **Start Convex Dev**:
+   ```bash
+   npx convex dev
+   ```
+
+2. **Start Your App**:
+   ```bash
+   pnpm dev
+   ```
+
+3. **Make Changes**: Edit schema or functions as needed
+
+4. **Auto-Deploy**: Convex automatically deploys changes
+
+### Adding New Tables
+
+<Steps>
+  <Step title="Define Table in Schema">
+    Add your table definition to `convex/schema.ts`:
+    ```typescript
+    highlights: defineTable({
+      verseId: v.string(),
+      userId: v.string(),
+      color: v.string(),
+    }).index("by_user_id", ["userId"]),
+    ```
+  </Step>
+
+  <Step title="Save and Deploy">
+    Save the file. Convex dev will automatically deploy the new table.
+  </Step>
+
+  <Step title="Create Query/Mutation Functions">
+    Create corresponding functions in the `convex/` directory to interact with the new table.
+  </Step>
+</Steps>
+
+### Adding Indexes
+
+Indexes improve query performance:
+
+```typescript
+.index("by_field_name", ["fieldName"])
+.index("by_multiple_fields", ["field1", "field2"])
+```
+
+<Note>
+  Add indexes for fields you frequently query or filter by. Indexes are automatically maintained by Convex.
+</Note>
+
+## Convex Dashboard
+
+The [Convex Dashboard](https://dashboard.convex.dev/) provides:
+
+- **Data Browser**: View and edit data in your tables
+- **Logs**: Real-time function execution logs
+- **Metrics**: Performance and usage statistics
+- **Schema Viewer**: Visual representation of your schema
+- **Environment Management**: Switch between dev and prod
+
+### Useful Dashboard Features
+
+1. **Query Data**: Run queries directly in the dashboard
+2. **Monitor Functions**: See function execution times and errors
+3. **View Logs**: Debug issues with detailed logs
+4. **Manage Deployments**: View and manage all deployments
+
+## Best Practices
+
+### Schema Design
+
+1. **Use Indexes**: Add indexes for commonly queried fields
+2. **Denormalize When Needed**: Store duplicate data for faster reads
+3. **Plan for Growth**: Design schema with scalability in mind
+4. **Use References**: Link tables using Convex IDs
+
+### Query Optimization
+
+1. **Limit Results**: Use `.take()` to limit query results
+2. **Filter Early**: Apply filters before sorting or pagination
+3. **Use Indexes**: Ensure queries use available indexes
+4. **Paginate Long Lists**: Don't load all data at once
+
+### Security
+
+1. **Validate Inputs**: Always validate data in mutations
+2. **Check Authorization**: Verify user permissions in functions
+3. **Sanitize Data**: Clean user input before storage
+4. **Use Server Functions**: Keep sensitive logic on the server
+
+<Warning>
+  Never expose sensitive data or API keys in client-side code. Use Convex server functions for sensitive operations.
+</Warning>
+
+## Troubleshooting
+
+### Schema Deployment Fails
+
+If schema deployment fails:
+- Check for syntax errors in `schema.ts`
+- Verify all imports are correct
+- Ensure no breaking changes to existing tables
+- Review error messages in the console
+
+### Data Not Syncing
+
+If data isn't updating in real-time:
+- Verify `VITE_CONVEX_URL` is correct
+- Check browser console for connection errors
+- Ensure `convex dev` is running
+- Verify queries are using the correct API endpoints
+
+### Connection Issues
+
+If Convex won't connect:
+- Check your internet connection
+- Verify environment variables are set
+- Try logging out and back into Convex CLI
+- Check Convex status page for outages
+
+### Performance Issues
+
+If queries are slow:
+- Add indexes for frequently queried fields
+- Reduce the amount of data returned
+- Use pagination for large datasets
+- Check the Convex dashboard for slow functions
+
+## Migration from Other Backends
+
+If you're migrating from another backend:
+
+<Steps>
+  <Step title="Export Existing Data">
+    Export your data from the current backend in JSON format.
+  </Step>
+
+  <Step title="Transform Data">
+    Transform data to match your Convex schema structure.
+  </Step>
+
+  <Step title="Import to Convex">
+    Use Convex mutations to import data in batches.
+  </Step>
+
+  <Step title="Verify Data">
+    Check the Convex dashboard to ensure all data imported correctly.
+  </Step>
+</Steps>
+
+## Additional Resources
+
+- [Convex Documentation](https://docs.convex.dev/)
+- [Convex Discord Community](https://convex.dev/community)
+- [Convex GitHub Examples](https://github.com/get-convex/convex-demos)
+- [Convex API Reference](https://docs.convex.dev/api)

@@ -1,80 +1,148 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quickstart
+description: Get started with Your Bible in minutes - from sign up to your first meaningful action
 ---
 
-## Get started in three steps
+Welcome to Your Bible! This guide will walk you through creating an account and using the core features of the application.
 
-Get your documentation site running locally and make your first customization.
+## Getting started
 
-### Step 1: Set up your local environment
-
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
+<Steps>
+  <Step title="Sign up or sign in">
+    Visit the Your Bible application and create a new account or sign in with your existing credentials.
     
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
+    - Click **Sign In** in the header
+    - Enter your email and password
+    - For new users, click **Sign Up** to create an account
     
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+    <Note>
+      Authentication is powered by Better Auth, providing secure email-based authentication. Some features like collections, notes, and AI stories require you to be signed in.
+    </Note>
+  </Step>
 
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
+  <Step title="Select a Bible translation">
+    Choose your preferred Bible translation to start reading.
     
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+    1. Click the **Bible translation dropdown** (e.g., "King James Version")
+    2. Search or scroll through available translations
+    3. Select your preferred version
+    
+    The application integrates with API.Bible to provide multiple translations in various languages.
+    
+    <Tip>
+      Try different translations to compare how verses are rendered. Popular options include KJV, NIV, ESV, and many more.
+    </Tip>
+  </Step>
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+  <Step title="Read your first chapter">
+    Navigate to a book and chapter to start reading scripture.
+    
+    1. Click the **book dropdown** and select a book (e.g., "Genesis")
+    2. Select a **chapter number** from the dropdown
+    3. Read through the chapter content
+    4. Use the **Previous** and **Next** buttons to navigate between chapters
+    
+    You can click on verse references to highlight specific verses with smooth scrolling.
+  </Step>
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+  <Step title="Create your first collection">
+    Save meaningful verses to a personal collection for easy access later.
+    
+    1. While reading, click the **bookmark icon** next to a verse
+    2. In the dialog, click **Create New Collection**
+    3. Give your collection a name (e.g., "Favorite Verses" or "Comfort & Peace")
+    4. Add the verse to your new collection
+    
+    Collections help you organize verses by theme, topic, or personal significance.
+    
+    <Warning>
+      You must be signed in to create and manage collections.
+    </Warning>
+  </Step>
 
-### Step 3: Go live
+  <Step title="Take your first note">
+    Capture your thoughts and insights about a chapter using the rich text notes feature.
+    
+    1. Navigate to any Bible chapter
+    2. Click **Open Notes** to reveal the notes panel
+    3. Use the rich text editor to write your thoughts
+    4. Format your text with **bold**, *italic*, lists, and more
+    5. Your notes auto-save as you type
+    
+    <Tabs>
+      <Tab title="Desktop">
+        On desktop, notes appear side-by-side with the Bible text for an integrated study experience.
+      </Tab>
+      <Tab title="Mobile">
+        On mobile, notes open in a full-screen sheet, giving you space to write and format your thoughts.
+      </Tab>
+    </Tabs>
+    
+    The notes editor is powered by Plate.js, providing a full-featured rich text editing experience.
+  </Step>
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+  <Step title="Try the search feature">
+    Search across the entire Bible to find verses containing specific words or phrases.
+    
+    1. Navigate to the **Search** page
+    2. Select a Bible translation
+    3. Enter search terms (e.g., "love", "hope", "faith")
+    4. Browse through paginated results
+    5. Click verse references to view them in context
+    
+    Search results highlight your query terms for easy identification.
+    
+    <Info>
+      You can add verses directly from search results to your collections!
+    </Info>
+  </Step>
 
-## Next steps
+  <Step title="Generate an AI story (optional)">
+    Create a creative narrative based on a biblical passage using AI.
+    
+    1. Navigate to the **Stories** section
+    2. Click **Create Story**
+    3. Select a Bible translation and chapter
+    4. Fill in the story parameters:
+       - **Title**: Give your story a name
+       - **Perspective**: Choose narrative viewpoint (e.g., "first-person observer")
+       - **Setting**: Describe the context or setting
+       - **Tone**: Specify emotional tone (e.g., "contemplative", "adventurous")
+       - **Length**: Choose short, medium, or long
+    5. Click **Generate Story** and wait for the AI to create your narrative
+    6. View your story alongside the original biblical text
+    
+    <Warning>
+      Story generation uses Google Gemini AI and is rate-limited to manage API costs. Please use this feature thoughtfully.
+    </Warning>
+    
+    <Note>
+      AI stories are designed to explore creative perspectives while adhering to theological guidelines. They complement but don't replace traditional Bible study.
+    </Note>
+  </Step>
+</Steps>
 
-Now that you have your docs running, explore these key features:
+## What's next?
+
+Now that you're familiar with the core features, explore more:
 
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Core Features" icon="stars" href="/features/bible-reading">
+    Deep dive into Bible reading, search, collections, notes, and AI stories
+  </Card>
+  <Card title="Installation Guide" icon="download" href="/installation">
+    Self-host Your Bible with full developer setup instructions
+  </Card>
+  <Card title="Architecture" icon="sitemap" href="/architecture/overview">
+    Learn about the technical architecture and tech stack
+  </Card>
+  <Card title="API Reference" icon="code" href="/api/server-actions/bible">
+    Explore the server actions and Convex functions
+  </Card>
 </CardGroup>
 
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>
+## Need help?
+
+- Check out the [feature documentation](/features/bible-reading) for detailed guides
+- Review the [guides](/guides/authentication) for setup and configuration
+- Visit the [GitHub repository](https://github.com/jjmbeba/your-bible) for source code and issues

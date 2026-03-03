@@ -1,0 +1,198 @@
+---
+title: Bible Components
+description: Components for Bible reading, navigation, and note-taking functionality
+---
+
+The Bible components provide a complete set of UI elements for displaying Bible content, navigating through chapters, and managing notes.
+
+## BibleSelector
+
+A searchable dropdown component for selecting different Bible translations.
+
+### Props
+
+<ParamField path="value" type="string" optional>
+  The currently selected Bible ID
+</ParamField>
+
+### Usage Example
+
+```tsx
+import BibleSelector from '@/components/bible/bible-selector'
+
+<BibleSelector value="KJV" />
+```
+
+<Note>
+  The BibleSelector component automatically fetches available Bible translations using the `useBibles` hook and handles navigation when a Bible is selected.
+</Note>
+
+---
+
+## BibleDropdown
+
+A dual-select component for choosing Bible books and chapters.
+
+### Props
+
+<ParamField path="bible" type="string" optional>
+  The selected Bible translation ID
+</ParamField>
+
+<ParamField path="chapter" type="string" optional>
+  The currently selected chapter ID (format: `book.chapter`)
+</ParamField>
+
+### Usage Example
+
+```tsx
+import BibleDropDown from '@/components/bible/bible-dropdown'
+
+<BibleDropDown 
+  bible="KJV" 
+  chapter="GEN.1" 
+/>
+```
+
+<Note>
+  This component displays two select dropdowns: one for books and one for chapters. When a book is selected, it automatically navigates to the first chapter of that book.
+</Note>
+
+---
+
+## ChapterNavigation
+
+Navigation buttons for moving between Bible chapters.
+
+### Props
+
+<ParamField path="previous" type="object" optional>
+  Information about the previous chapter
+  
+  <Expandable title="properties">
+    <ParamField path="id" type="string" optional>
+      The chapter ID
+    </ParamField>
+    
+    <ParamField path="bookId" type="string" optional>
+      The book ID
+    </ParamField>
+    
+    <ParamField path="number" type="string" optional>
+      The chapter number
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="next" type="object" optional>
+  Information about the next chapter
+  
+  <Expandable title="properties">
+    <ParamField path="id" type="string" optional>
+      The chapter ID
+    </ParamField>
+    
+    <ParamField path="bookId" type="string" optional>
+      The book ID
+    </ParamField>
+    
+    <ParamField path="number" type="string" optional>
+      The chapter number
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+### Usage Example
+
+```tsx
+import ChapterNavigation from '@/components/bible/chapter-navigation'
+
+<ChapterNavigation 
+  previous={{ id: "GEN.1", bookId: "GEN", number: "1" }}
+  next={{ id: "GEN.3", bookId: "GEN", number: "3" }}
+/>
+```
+
+<Note>
+  The navigation buttons are automatically disabled when there is no previous or next chapter available.
+</Note>
+
+---
+
+## NoteEditor
+
+A rich text editor component for creating and editing chapter notes.
+
+### Props
+
+<ParamField path="chapterId" type="string" required>
+  The ID of the Bible chapter being annotated
+</ParamField>
+
+<ParamField path="userId" type="string" required>
+  The ID of the user creating or editing the note
+</ParamField>
+
+### Usage Example
+
+```tsx
+import NoteEditor from '@/components/bible/note-editor'
+
+<NoteEditor 
+  chapterId="GEN.1" 
+  userId="user_123" 
+/>
+```
+
+<Note>
+  The NoteEditor uses the Plate editor and automatically loads existing notes for the specified chapter. It includes a toolbar for formatting and provides Save/Reset buttons.
+</Note>
+
+### Features
+
+- Rich text editing with formatting toolbar
+- Auto-save functionality
+- Loads existing notes on mount
+- Form validation using Zod schemas
+- Loading states during save operations
+
+---
+
+## NotesView
+
+A container component that conditionally displays the note editor with animations.
+
+### Props
+
+<ParamField path="openNotes" type="boolean" required>
+  Whether the notes panel should be visible
+</ParamField>
+
+<ParamField path="userChapterBibleExists" type="boolean" required>
+  Whether the user has access to the chapter/Bible combination
+</ParamField>
+
+<ParamField path="chapterId" type="string" required>
+  The ID of the Bible chapter
+</ParamField>
+
+<ParamField path="userId" type="string" required>
+  The ID of the user
+</ParamField>
+
+### Usage Example
+
+```tsx
+import NotesView from '@/components/bible/notes-view'
+
+<NotesView 
+  openNotes={true}
+  userChapterBibleExists={true}
+  chapterId="GEN.1" 
+  userId="user_123" 
+/>
+```
+
+<Note>
+  This component includes transition animations and suspense boundaries for loading states. It renders the NoteEditor only when the user has access to the content.
+</Note>

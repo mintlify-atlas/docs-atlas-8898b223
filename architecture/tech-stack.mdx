@@ -1,0 +1,402 @@
+---
+title: "Technology Stack"
+description: "Detailed overview of technologies, frameworks, and libraries powering Your Bible"
+---
+
+## Technology Overview
+
+Your Bible is built with a carefully selected stack of modern, production-ready technologies that prioritize type safety, developer experience, and real-time capabilities.
+
+## Frontend Technologies
+
+<CardGroup cols={2}>
+  <Card title="TanStack Start" icon="rocket" href="https://tanstack.com/start">
+    **Version**: 1.121.4
+    
+    Full-stack React framework with built-in SSR, file-based routing, and server actions.
+    
+    **Why chosen**:
+    - Unified full-stack solution
+    - Type-safe routing and data fetching
+    - Excellent developer experience
+    - Built-in deployment optimizations
+    - Seamless integration with TanStack ecosystem
+  </Card>
+  
+  <Card title="React 19" icon="react" href="https://react.dev">
+    **Version**: 19.1.0
+    
+    Latest version of React with concurrent features and improved hooks.
+    
+    **Why chosen**:
+    - Industry-standard UI library
+    - Concurrent rendering for better UX
+    - Rich ecosystem of components
+    - Enhanced performance
+    - Built-in suspense and transitions
+  </Card>
+  
+  <Card title="TypeScript" icon="code" href="https://www.typescriptlang.org">
+    **Version**: 5.8.3
+    
+    Strongly typed superset of JavaScript for type-safe development.
+    
+    **Why chosen**:
+    - Catch errors at compile time
+    - Superior IDE support and autocomplete
+    - Self-documenting code
+    - Safer refactoring
+    - Better collaboration
+  </Card>
+  
+  <Card title="Tailwind CSS v4" icon="palette" href="https://tailwindcss.com">
+    **Version**: 4.1.10
+    
+    Utility-first CSS framework for rapid UI development.
+    
+    **Why chosen**:
+    - Rapid prototyping and development
+    - Consistent design system
+    - Minimal CSS bundle size
+    - Excellent customization
+    - Great mobile-responsive utilities
+  </Card>
+</CardGroup>
+
+### State Management & Data Fetching
+
+<CardGroup cols={2}>
+  <Card title="TanStack Query" icon="database" href="https://tanstack.com/query">
+    **Version**: 5.80.7
+    
+    Powerful server state management with caching, background updates, and optimistic mutations.
+    
+    **Features**:
+    - Automatic caching and invalidation
+    - Background refetching
+    - Optimistic updates
+    - Pagination and infinite scroll
+    - Query devtools for debugging
+  </Card>
+  
+  <Card title="TanStack Router" icon="route" href="https://tanstack.com/router">
+    **Version**: 1.121.2
+    
+    Type-safe, file-based routing with built-in data loading.
+    
+    **Features**:
+    - File-based routing convention
+    - Type-safe navigation and params
+    - Route-level data loading
+    - Nested layouts
+    - Search param validation with Zod
+  </Card>
+  
+  <Card title="TanStack Form" icon="input" href="https://tanstack.com/form">
+    **Version**: 1.12.0
+    
+    Powerful form handling with validation.
+    
+    **Features**:
+    - Type-safe form state
+    - Field-level validation
+    - Async validation support
+    - Complex nested forms
+    - Integration with Zod schemas
+  </Card>
+  
+  <Card title="Convex React Query" icon="arrows-rotate" href="https://docs.convex.dev/client/react/react-query">
+    **Version**: 0.0.0-alpha.8
+    
+    Bridge between Convex and TanStack Query for real-time data.
+    
+    **Features**:
+    - Real-time query subscriptions
+    - Automatic invalidation
+    - Optimistic updates
+    - Familiar Query API
+  </Card>
+</CardGroup>
+
+### UI Components & Design
+
+<CardGroup cols={2}>
+  <Card title="Shadcn/ui" icon="layer-group" href="https://ui.shadcn.com">
+    High-quality, accessible component library built on Radix UI.
+    
+    **Components used**:
+    - Dialogs and modals
+    - Dropdown menus
+    - Form inputs and labels
+    - Tabs and accordions
+    - Popovers and tooltips
+    - Scroll areas
+    - Avatars and alerts
+  </Card>
+  
+  <Card title="Radix UI" icon="cube" href="https://www.radix-ui.com">
+    Unstyled, accessible component primitives.
+    
+    **Why chosen**:
+    - Full accessibility (ARIA)
+    - Keyboard navigation
+    - Focus management
+    - Unstyled (easy customization)
+    - High-quality primitives
+  </Card>
+  
+  <Card title="Lucide React" icon="icons" href="https://lucide.dev">
+    **Version**: 0.514.0
+    
+    Beautiful, customizable icon library.
+    
+    **Features**:
+    - 1000+ consistent icons
+    - Tree-shakeable
+    - Customizable size and color
+    - Stroke width control
+  </Card>
+  
+  <Card title="Plate.js" icon="text" href="https://platejs.org">
+    **Version**: 49.0.6
+    
+    Rich text editor framework for notes feature.
+    
+    **Features**:
+    - Plugin-based architecture
+    - Markdown shortcuts
+    - Formatting tools (bold, italic, lists)
+    - Mentions and emojis
+    - Customizable toolbar
+  </Card>
+</CardGroup>
+
+### Utilities & Helpers
+
+<Accordion title="UI Utilities">
+  - **class-variance-authority**: Component variant styling
+  - **clsx**: Conditional className composition
+  - **tailwind-merge**: Smart Tailwind class merging
+  - **@udecode/cn**: Class name utility for Plate components
+  - **next-themes**: Dark mode support
+  - **sonner**: Beautiful toast notifications
+</Accordion>
+
+<Accordion title="Data & Validation">
+  - **zod**: Schema validation for forms and API data
+  - **html-react-parser**: Parse HTML strings into React
+  - **date-fns**: Date manipulation and formatting
+</Accordion>
+
+<Accordion title="Media & Embeds">
+  - **react-player**: Video player component
+  - **react-lite-youtube-embed**: Lightweight YouTube embeds
+  - **react-tweet**: Embed tweets
+  - **@emoji-mart/data**: Emoji picker data
+</Accordion>
+
+## Backend Technologies
+
+<CardGroup cols={2}>
+  <Card title="Convex" icon="server" href="https://www.convex.dev">
+    **Version**: 1.24.8
+    
+    Real-time backend-as-a-service with automatic sync.
+    
+    **Why chosen**:
+    - Real-time data synchronization
+    - Type-safe database queries
+    - Serverless functions
+    - Built-in caching and optimization
+    - Excellent TypeScript support
+    - Zero-config deployment
+    
+    **Used for**:
+    - Collections storage
+    - User notes
+    - AI-generated stories
+    - Verse collections
+  </Card>
+  
+  <Card title="Better Auth" icon="lock" href="https://www.better-auth.com">
+    **Version**: 1.2.9
+    
+    Modern authentication library for full-stack apps.
+    
+    **Why chosen**:
+    - Easy integration with TanStack Start
+    - Multiple auth strategies
+    - Session management
+    - Type-safe API
+    - Built-in security features
+    
+    **Features**:
+    - Email/password authentication
+    - Session persistence
+    - Protected routes
+    - OAuth support (GitHub configured)
+  </Card>
+  
+  <Card title="PostgreSQL + Drizzle" icon="database" href="https://orm.drizzle.team">
+    **Drizzle ORM**: 0.44.2
+    
+    Type-safe PostgreSQL ORM for authentication data.
+    
+    **Why chosen**:
+    - Type-safe queries
+    - SQL-like syntax
+    - Great TypeScript inference
+    - Minimal overhead
+    - Easy migrations
+    
+    **Database**: Neon serverless PostgreSQL
+  </Card>
+  
+  <Card title="Redis (Upstash)" icon="gauge" href="https://upstash.com">
+    **@upstash/redis**: 1.35.0  
+    **@upstash/ratelimit**: 2.0.5
+    
+    Serverless Redis for rate limiting.
+    
+    **Why chosen**:
+    - Serverless (pay-per-request)
+    - Global edge network
+    - Built-in rate limiting
+    - No connection pooling needed
+    
+    **Used for**:
+    - Story generation rate limiting
+    - API cost management
+  </Card>
+</CardGroup>
+
+## External APIs & Services
+
+<CardGroup cols={3}>
+  <Card title="API.Bible" icon="book-bible" href="https://scripture.api.bible">
+    Bible content provider with multiple translations.
+    
+    **Features**:
+    - 50+ Bible translations
+    - Verse and chapter retrieval
+    - Full-text search
+    - Cross-references
+    - REST API
+    
+    **Integration**: Axios HTTP client in server actions
+  </Card>
+  
+  <Card title="Google Gemini AI" icon="brain" href="https://ai.google.dev">
+    **SDK**: @google/genai 1.6.0
+    
+    Generative AI for story creation.
+    
+    **Model**: gemini-1.5-flash
+    
+    **Features**:
+    - Creative text generation
+    - Customizable prompts
+    - Fast response times
+    - Cost-effective
+    
+    **Used for**: AI-powered story generation from Bible passages
+  </Card>
+  
+  <Card title="UploadThing" icon="upload" href="https://uploadthing.com">
+    **Version**: 7.7.2
+    
+    File upload service.
+    
+    **Features**:
+    - Serverless uploads
+    - Image optimization
+    - CDN delivery
+    - Easy React integration
+  </Card>
+</CardGroup>
+
+## Development Tools
+
+<CardGroup cols={2}>
+  <Card title="Vite" icon="bolt" href="https://vite.dev">
+    **Version**: 6.3.5
+    
+    Fast build tool and dev server.
+    
+    **Features**:
+    - Lightning-fast HMR
+    - Native ESM support
+    - Optimized builds
+    - Plugin ecosystem
+    - TypeScript support
+  </Card>
+  
+  <Card title="vite-tsconfig-paths" icon="folder-tree">
+    **Version**: 5.1.4
+    
+    Path alias resolution for Vite.
+    
+    **Enables**: `@/*` imports mapped to `src/*`
+  </Card>
+  
+  <Card title="TSX" icon="terminal">
+    **Version**: 4.20.3
+    
+    TypeScript execution for scripts.
+    
+    **Used for**: Running TypeScript build scripts and utilities
+  </Card>
+  
+  <Card title="Drizzle Kit" icon="wrench">
+    **Version**: 0.31.1
+    
+    Database migration tool for Drizzle ORM.
+    
+    **Features**: Schema generation and migrations
+  </Card>
+</CardGroup>
+
+## Package Management
+
+<Note>
+  The project uses **pnpm** as the recommended package manager for:
+  - Faster installations
+  - Disk space efficiency
+  - Stricter dependency resolution
+  - Better monorepo support
+</Note>
+
+## Runtime & Deployment
+
+<CardGroup cols={2}>
+  <Card title="Node.js" icon="node-js">
+    **Minimum Version**: 18+
+    
+    Runtime environment for server-side code.
+  </Card>
+  
+  <Card title="Vercel" icon="triangle">
+    **Target Platform**: Configured in `vite.config.ts`
+    
+    - Serverless deployment
+    - Edge network CDN
+    - Automatic HTTPS
+    - Environment variables
+    - Preview deployments
+  </Card>
+</CardGroup>
+
+## Type Safety Stack
+
+The entire stack is built with type safety as a core principle:
+
+1. **TypeScript** - Type-safe JavaScript
+2. **Zod** - Runtime type validation
+3. **Drizzle ORM** - Type-safe database queries
+4. **TanStack Router** - Type-safe routing
+5. **TanStack Query** - Type-safe API calls
+6. **Convex** - Type-safe backend functions
+
+<Tip>
+  This comprehensive type safety prevents runtime errors and provides excellent IDE autocomplete and error checking throughout the development process.
+</Tip>

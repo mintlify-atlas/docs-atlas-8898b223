@@ -1,0 +1,211 @@
+---
+title: 'Verse Collections'
+description: 'Add and remove verses from collections'
+---
+
+## addVerseToCollection
+
+Add a Bible verse to an existing collection.
+
+<ParamField path="verseId" type="string" required>
+  The unique identifier of the Bible verse
+</ParamField>
+
+<ParamField path="collectionId" type="Id<'collections'>" required>
+  The unique identifier of the collection to add the verse to
+</ParamField>
+
+<ParamField path="userId" type="string" required>
+  The user ID requesting the operation to verify collection ownership
+</ParamField>
+
+<ParamField path="verseText" type="string" required>
+  The text content of the verse
+</ParamField>
+
+<ParamField path="chapterId" type="string" required>
+  The unique identifier of the chapter containing this verse
+</ParamField>
+
+<ParamField path="bibleId" type="string" required>
+  The Bible translation identifier (e.g., "KJV", "NIV")
+</ParamField>
+
+<ResponseField name="verseCollectionId" type="Id<'collectionVerses'>">
+  The unique identifier of the newly created collection verse entry
+</ResponseField>
+
+<Note>
+  This function validates that the requesting user owns the collection before allowing the verse to be added.
+</Note>
+
+```typescript
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
+
+function AddVerseButton({
+  verseId,
+  verseText,
+  chapterId,
+  bibleId,
+  collectionId
+}: {
+  verseId: string;
+  verseText: string;
+  chapterId: string;
+  bibleId: string;
+  collectionId: Id<"collections">;
+}) {
+  const addVerse = useMutation(api.verseCollections.addVerseToCollection);
+
+  const handleAdd = async () => {
+    await addVerse({
+      verseId,
+      verseText,
+      chapterId,
+      bibleId,
+      collectionId,
+      userId: "user_123"
+    });
+  };
+
+  return <button onClick={handleAdd}>Add to Collection</button>;
+}
+```
+
+---
+
+## getVerseCollections
+
+Retrieve all verses in a specific collection.
+
+<ParamField path="collectionId" type="Id<'collections'>" required>
+  The unique identifier of the collection
+</ParamField>
+
+<ParamField path="userId" type="string" required>
+  The user ID requesting access to verify collection ownership
+</ParamField>
+
+<ResponseField name="verses" type="array">
+  Array of verse objects in the collection
+  <Expandable title="Verse Object">
+    <ResponseField name="_id" type="Id<'collectionVerses'>">
+      Unique collection verse entry identifier
+    </ResponseField>
+    <ResponseField name="verseId" type="string">
+      Bible verse identifier
+    </ResponseField>
+    <ResponseField name="verseText" type="string">
+      The text content of the verse
+    </ResponseField>
+    <ResponseField name="chapterId" type="string">
+      Chapter identifier
+    </ResponseField>
+    <ResponseField name="bibleId" type="string">
+      Bible translation identifier
+    </ResponseField>
+    <ResponseField name="collectionId" type="Id<'collections'>">
+      Reference to parent collection
+    </ResponseField>
+    <ResponseField name="_creationTime" type="number">
+      Timestamp when verse was added to collection
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<Note>
+  This function validates that the requesting user owns the collection before returning verses.
+</Note>
+
+```typescript
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
+
+function CollectionVerses({ 
+  collectionId 
+}: { 
+  collectionId: Id<"collections"> 
+}) {
+  const verses = useQuery(api.verseCollections.getVerseCollections, {
+    collectionId,
+    userId: "user_123"
+  });
+
+  if (!verses) return <div>Loading...</div>;
+
+  return (
+    <div>
+      <h3>Verses in Collection</h3>
+      {verses.map((verse) => (
+        <div key={verse._id}>
+          <p>{verse.verseText}</p>
+          <small>From {verse.chapterId} ({verse.bibleId})</small>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+---
+
+## deleteVerseFromCollection
+
+Remove a verse from a collection.
+
+<ParamField path="verseCollectionId" type="Id<'collectionVerses'>" required>
+  The unique identifier of the collection verse entry to delete
+</ParamField>
+
+<ParamField path="collectionId" type="Id<'collections'>" required>
+  The unique identifier of the collection (used for access validation)
+</ParamField>
+
+<ParamField path="userId" type="string" required>
+  The user ID requesting the deletion to verify collection ownership
+</ParamField>
+
+<ResponseField name="response" type="null">
+  Returns null on successful deletion
+</ResponseField>
+
+<Note>
+  This function validates that the requesting user owns the collection before allowing the verse to be removed.
+  This only removes the verse from the collection, not from the Bible database.
+</Note>
+
+```typescript
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
+
+function RemoveVerseButton({
+  verseCollectionId,
+  collectionId
+}: {
+  verseCollectionId: Id<"collectionVerses">;
+  collectionId: Id<"collections">;
+}) {
+  const removeVerse = useMutation(api.verseCollections.deleteVerseFromCollection);
+
+  const handleRemove = async () => {
+    if (confirm("Remove this verse from the collection?")) {
+      await removeVerse({
+        verseCollectionId,
+        collectionId,
+        userId: "user_123"
+      });
+    }
+  };
+
+  return <button onClick={handleRemove}>Remove</button>;
+}
+```
+
+<Note>
+  The `verseCollectionId` parameter refers to the `_id` of the entry in the `collectionVerses` table,
+  not the `verseId` field. Make sure to pass the correct identifier when removing verses.
+</Note>

@@ -1,0 +1,234 @@
+---
+title: "Architecture Overview"
+description: "High-level architecture and system design of Your Bible application"
+---
+
+## System Architecture
+
+Your Bible is built as a modern full-stack web application with a clear separation between frontend presentation, backend services, and external integrations.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      Client Browser                         │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │         TanStack Start + React 19 Frontend            │  │
+│  │  • File-based routing (TanStack Router)               │  │
+│  │  • Server-side rendering (SSR)                        │  │
+│  │  • Client-side state (TanStack Query)                 │  │
+│  └───────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+                            ↕
+┌─────────────────────────────────────────────────────────────┐
+│                    Server Actions Layer                     │
+│  • Authentication (Better Auth)                             │
+│  • Bible data fetching                                      │
+│  • AI story generation                                      │
+│  • Rate limiting (Redis)                                    │
+└─────────────────────────────────────────────────────────────┘
+                            ↕
+┌─────────────────────────────────────────────────────────────┐
+│                   Backend & Database                        │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
+│  │   Convex     │  │  PostgreSQL  │  │    Redis     │      │
+│  │  (Real-time  │  │    (Neon)    │  │ (Rate limit) │      │
+│  │   backend)   │  │   (Auth DB)  │  │              │      │
+│  └──────────────┘  └──────────────┘  └──────────────┘      │
+└─────────────────────────────────────────────────────────────┘
+                            ↕
+┌─────────────────────────────────────────────────────────────┐
+│                   External Services                         │
+│  ┌──────────────┐  ┌──────────────┐                        │
+│  │  API.Bible   │  │ Google Gemini│                        │
+│  │  (Content)   │  │     AI       │                        │
+│  └──────────────┘  └──────────────┘                        │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## Frontend Architecture
+
+The frontend is built with modern React patterns and TanStack ecosystem:
+
+<CardGroup cols={2}>
+  <Card title="TanStack Start" icon="rocket">
+    Full-stack React framework providing SSR, file-based routing, and server actions. Configured to deploy on Vercel.
+  </Card>
+  
+  <Card title="React 19" icon="react">
+    Latest React with concurrent features, improved hooks, and enhanced performance.
+  </Card>
+  
+  <Card title="TanStack Router" icon="route">
+    File-based routing with type safety. Routes are defined in `src/routes/` with automatic route tree generation.
+  </Card>
+  
+  <Card title="TanStack Query" icon="database">
+    Server state management with caching, background refetching, and optimistic updates. Integrated with Convex via `@convex-dev/react-query`.
+  </Card>
+</CardGroup>
+
+### Rendering Strategy
+
+- **Server-Side Rendering (SSR)**: Initial page loads are server-rendered for optimal performance and SEO
+- **Client-Side Hydration**: React takes over after initial load for interactive UI
+- **Loading States**: Uses `useRouterState` to show skeleton screens during navigation
+- **Session Management**: Sessions are fetched in root route's `beforeLoad` and cached in QueryClient
+
+## Backend Architecture
+
+The backend leverages multiple specialized services:
+
+<Accordion title="Convex - Real-time Backend">
+  Convex provides the primary backend infrastructure:
+  - **Real-time synchronization**: Automatic updates across clients
+  - **Serverless functions**: Backend logic runs on Convex infrastructure
+  - **TypeScript-first**: Type-safe database queries and mutations
+  - **Schema-based**: Defined schemas for collections, notes, and stories
+  
+  The Convex client is initialized in the root route and provided via `ConvexProvider` to the entire application tree.
+</Accordion>
+
+<Accordion title="Server Actions (TanStack Start)">
+  Server actions handle operations that require server-side execution:
+  - Authentication flows (Better Auth integration)
+  - Bible API requests (API.Bible)
+  - AI story generation (Google Gemini)
+  - Rate limiting checks (Redis)
+  
+  Located in `src/actions/`, these functions run exclusively on the server and can access environment variables and backend services securely.
+</Accordion>
+
+<Accordion title="Better Auth + PostgreSQL">
+  Authentication is managed by Better Auth with Drizzle ORM:
+  - Email-based authentication
+  - Session persistence
+  - User management
+  - PostgreSQL database via Neon for auth data storage
+</Accordion>
+
+## Data Flow
+
+### Reading Bible Content
+
+```
+1. User selects book/chapter
+   ↓
+2. Component calls server action (src/actions/)
+   ↓
+3. Server action fetches from API.Bible
+   ↓
+4. Response cached in TanStack Query
+   ↓
+5. UI renders Bible text with verse highlighting
+```
+
+### Managing Collections
+
+```
+1. User creates/modifies collection
+   ↓
+2. Convex mutation called via React Query
+   ↓
+3. Convex validates and stores in database
+   ↓
+4. Real-time sync pushes updates to all clients
+   ↓
+5. UI automatically updates via Convex subscription
+```
+
+### Generating Stories
+
+```
+1. User submits story parameters
+   ↓
+2. Check rate limit (Redis)
+   ↓
+3. Server action calls Google Gemini AI
+   ↓
+4. AI generates story based on Bible passage
+   ↓
+5. Story saved to Convex database
+   ↓
+6. Real-time update displays new story
+```
+
+## Integration Points
+
+<CardGroup cols={3}>
+  <Card title="API.Bible" icon="book-bible">
+    **Purpose**: Bible content and translations
+    
+    **Features**:
+    - Multiple translations
+    - Chapter and verse retrieval
+    - Search functionality
+    - Metadata and references
+    
+    **Integration**: Server actions with Axios HTTP client
+  </Card>
+  
+  <Card title="Google Gemini AI" icon="sparkles">
+    **Purpose**: AI-powered story generation
+    
+    **Features**:
+    - Creative narrative generation
+    - Customizable parameters (tone, perspective, length)
+    - Theological guidelines enforcement
+    
+    **Integration**: `@google/genai` SDK in server actions
+  </Card>
+  
+  <Card title="Redis (Upstash)" icon="gauge">
+    **Purpose**: Rate limiting and caching
+    
+    **Features**:
+    - Story generation rate limits
+    - API cost management
+    - Prevent abuse
+    
+    **Integration**: `@upstash/ratelimit` with Redis client
+  </Card>
+</CardGroup>
+
+## Security Architecture
+
+<AccordionGroup>
+  <Accordion title="Authentication & Authorization">
+    - Session-based authentication with Better Auth
+    - Protected routes require valid session
+    - Server actions verify authentication before execution
+    - Sessions cached in QueryClient for performance
+  </Accordion>
+  
+  <Accordion title="API Key Management">
+    - All API keys stored in environment variables
+    - Server actions ensure keys never exposed to client
+    - Rate limiting prevents API abuse
+  </Accordion>
+  
+  <Accordion title="Data Privacy">
+    - User data (collections, notes, stories) scoped to authenticated user
+    - Convex queries automatically filter by user session
+    - No cross-user data access
+  </Accordion>
+</AccordionGroup>
+
+## Performance Considerations
+
+- **Code Splitting**: Automatic route-based code splitting via TanStack Start
+- **Caching**: TanStack Query caches API responses to reduce network requests
+- **Real-time Sync**: Convex efficiently syncs only changed data
+- **SSR**: Server-side rendering for fast initial page loads
+- **Lazy Loading**: Components and routes loaded on demand
+- **Optimistic Updates**: UI updates immediately with rollback on error
+
+## Deployment Architecture
+
+The application is configured for deployment on Vercel:
+
+- **Frontend & Server Actions**: Deployed as Vercel serverless functions
+- **Convex Backend**: Runs on Convex infrastructure (separate deployment)
+- **Database**: PostgreSQL on Neon (managed service)
+- **Redis**: Upstash Redis (serverless)
+- **CDN**: Static assets served via Vercel Edge Network
+
+The `vite.config.ts` specifies `target: 'vercel'` for the TanStack Start plugin, optimizing the build for Vercel's deployment platform.

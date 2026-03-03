@@ -1,0 +1,98 @@
+---
+title: Story Components
+description: Components for managing user-created Bible stories
+---
+
+Story components provide functionality for users to create, view, and manage their personal Bible stories and devotionals.
+
+## DeleteStoryButton
+
+A button component with confirmation dialog for deleting a story.
+
+### Props
+
+<ParamField path="id" type="Id<'stories'>" required>
+  The unique identifier of the story to delete
+</ParamField>
+
+### Usage Example
+
+```tsx
+import DeleteStoryButton from '@/components/stories/delete-story-btn'
+
+<DeleteStoryButton id={storyId} />
+```
+
+### Features
+
+- Destructive styling with trash icon
+- Alert dialog confirmation before deletion
+- Loading state during deletion
+- Responsive text (hidden on mobile, visible on desktop)
+- Automatic session validation
+- Disabled state when operation is pending
+
+<Note>
+  This component includes a confirmation dialog to prevent accidental deletions. The action is irreversible and will permanently delete the story and all its contents.
+</Note>
+
+### Dialog Content
+
+The confirmation dialog includes:
+
+- Warning title: "Are you sure?"
+- Description explaining the permanent nature of deletion
+- Cancel button to abort the operation
+- Delete button with loading indicator
+
+### Security
+
+The component verifies user authentication before allowing deletion:
+
+```tsx
+if (!session?.session.userId) return;
+```
+
+Only authenticated users who own the story can delete it.
+
+---
+
+## Story Creation and Management
+
+While the current codebase shows a delete button for stories, the story feature includes:
+
+### Expected Story Features
+
+<CardGroup cols={2}>
+  <Card title="Story Creation" icon="pen">
+    Components for creating new Bible-based stories and devotionals
+  </Card>
+  
+  <Card title="Story Viewing" icon="book">
+    Display components for reading and viewing story content
+  </Card>
+  
+  <Card title="Story Editing" icon="edit">
+    Rich text editing capabilities for story content
+  </Card>
+  
+  <Card title="Story Sharing" icon="share">
+    Options to share stories with other users or make them public
+  </Card>
+</CardGroup>
+
+---
+
+## Future Components
+
+The stories feature is designed to be extensible. Future components may include:
+
+- `StoryCard` - Display component for story previews
+- `CreateStoryForm` - Form for creating new stories
+- `EditStoryForm` - Form for editing existing stories
+- `StoryList` - List view of user's stories
+- `StoryViewer` - Full-page story reading view
+
+<Note>
+  The stories feature allows users to create devotionals, reflections, and teachings based on Bible passages. Stories can incorporate multiple verses and include rich text formatting.
+</Note>

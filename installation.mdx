@@ -1,0 +1,284 @@
+---
+title: Installation
+description: Self-host Your Bible - complete setup guide for developers
+---
+
+# Installation Guide
+
+This guide will help you set up and self-host Your Bible application on your own infrastructure.
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed and configured:
+
+- **Node.js 18+** - JavaScript runtime
+- **pnpm** (recommended), npm, or yarn - Package manager
+- **Git** - Version control
+
+### Required API Keys and Services
+
+You'll need accounts and API keys for the following services:
+
+- **Convex** - Real-time backend ([convex.dev](https://convex.dev))
+- **API.Bible** - Bible content API ([api.bible](https://api.bible))
+- **Google Gemini AI** - AI story generation ([ai.google.dev](https://ai.google.dev))
+- **Neon** or another PostgreSQL provider - Database ([neon.tech](https://neon.tech))
+- **Upstash Redis** - Rate limiting and caching ([upstash.com](https://upstash.com))
+- **Better Auth** - Authentication configuration
+- **UploadThing** (optional) - File uploads ([uploadthing.com](https://uploadthing.com))
+- **GitHub OAuth** (optional) - GitHub authentication
+
+## Installation Steps
+
+<Steps>
+  <Step title="Clone the Repository">
+    Clone the Your Bible repository to your local machine:
+    
+    ```bash
+    git clone <repository-url>
+    cd your-bible
+    ```
+  </Step>
+
+  <Step title="Install Dependencies">
+    Install all required packages using your preferred package manager:
+    
+    <CodeGroup>
+      ```bash pnpm
+      pnpm install
+      ```
+      
+      ```bash npm
+      npm install
+      ```
+      
+      ```bash yarn
+      yarn install
+      ```
+    </CodeGroup>
+    
+    <Note>
+      pnpm is recommended for faster installation and better disk space efficiency.
+    </Note>
+  </Step>
+
+  <Step title="Configure Environment Variables">
+    Create a `.env` file in the root directory with all required configuration:
+    
+    ```env
+    # API.Bible Configuration
+    API_BASE_URL=https://api.scripture.api.bible/v1
+    API_KEY=your_api_bible_key_here
+    
+    # Better Auth
+    BETTER_AUTH_SECRET=your_better_auth_secret_here
+    BETTER_AUTH_URL=http://localhost:5173
+    
+    # Database (PostgreSQL via Neon)
+    DATABASE_URL=your_neon_database_url_here
+    
+    # GitHub OAuth (Optional)
+    GITHUB_CLIENT_ID=your_github_client_id_here
+    GITHUB_CLIENT_SECRET=your_github_client_secret_here
+    
+    # File Upload (Optional)
+    UPLOADTHING_TOKEN=your_uploadthing_token_here
+    
+    # Google Gemini AI
+    GEMINI_MODEL=gemini-1.5-flash
+    GEMINI_API_KEY=your_gemini_api_key_here
+    
+    # Redis/KV Storage (Upstash)
+    KV_URL=your_kv_url_here
+    KV_REST_API_URL=your_kv_rest_api_url_here
+    KV_REST_API_TOKEN=your_kv_rest_api_token_here
+    KV_REST_API_READ_ONLY_TOKEN=your_kv_rest_api_read_only_token_here
+    REDIS_URL=your_redis_url_here
+    
+    # Convex
+    CONVEX_DEPLOYMENT=your_convex_deployment_here
+    VITE_CONVEX_URL=your_convex_url_here
+    ```
+    
+    <Warning>
+      Never commit your `.env` file to version control. Keep your API keys and secrets secure.
+    </Warning>
+    
+    ### Environment Variable Details
+    
+    **API.Bible Configuration:**
+    - `API_BASE_URL`: Base URL for API.Bible (typically `https://api.scripture.api.bible/v1`)
+    - `API_KEY`: Your API.Bible API key from [api.bible](https://api.bible)
+    
+    **Better Auth:**
+    - `BETTER_AUTH_SECRET`: Random secret string for session encryption (generate with `openssl rand -base64 32`)
+    - `BETTER_AUTH_URL`: Your application URL (use `http://localhost:5173` for development)
+    
+    **Database:**
+    - `DATABASE_URL`: PostgreSQL connection string from Neon or your provider
+    
+    **Google Gemini AI:**
+    - `GEMINI_MODEL`: AI model to use (e.g., `gemini-1.5-flash`)
+    - `GEMINI_API_KEY`: Your Google AI API key
+    
+    **Redis (Upstash):**
+    - Required for rate limiting on AI story generation
+    - Get all Redis/KV variables from your Upstash dashboard
+    
+    **Convex:**
+    - `CONVEX_DEPLOYMENT`: Your Convex deployment name
+    - `VITE_CONVEX_URL`: Your Convex deployment URL
+  </Step>
+
+  <Step title="Set Up Convex">
+    Initialize and deploy your Convex backend:
+    
+    ```bash
+    npx convex dev
+    ```
+    
+    This command will:
+    1. Set up your Convex project
+    2. Create the necessary database tables (collections, collectionVerses, notes, stories)
+    3. Start watching for schema changes
+    4. Provide you with your `CONVEX_DEPLOYMENT` and `VITE_CONVEX_URL` values
+    
+    <Note>
+      Keep the `convex dev` command running in a separate terminal window during development. It will automatically sync schema changes and functions.
+    </Note>
+  </Step>
+
+  <Step title="Set Up Database">
+    If using Drizzle ORM for database migrations, run:
+    
+    ```bash
+    pnpm drizzle-kit push
+    ```
+    
+    This will create all necessary database tables in your PostgreSQL instance.
+  </Step>
+
+  <Step title="Start the Development Server">
+    Launch the application in development mode:
+    
+    <CodeGroup>
+      ```bash pnpm
+      pnpm dev
+      ```
+      
+      ```bash npm
+      npm run dev
+      ```
+      
+      ```bash yarn
+      yarn dev
+      ```
+    </CodeGroup>
+    
+    The application will be available at `http://localhost:5173`
+  </Step>
+</Steps>
+
+## Verify Installation
+
+Once the development server is running:
+
+1. Open `http://localhost:5173` in your browser
+2. You should see the Your Bible homepage
+3. Test the Bible reader by selecting a translation and chapter
+4. Create an account to test authentication
+5. Try creating a collection and adding verses
+6. Test the search functionality
+7. Create a note on a chapter
+8. Generate an AI story (if you have Gemini API configured)
+
+## Production Build
+
+To build the application for production:
+
+<CodeGroup>
+  ```bash pnpm
+  pnpm build
+  ```
+  
+  ```bash npm
+  npm run build
+  ```
+  
+  ```bash yarn
+  yarn build
+  ```
+</CodeGroup>
+
+The build output will be in the `dist` directory, ready for deployment.
+
+## Project Structure
+
+Understanding the project structure:
+
+```
+src/
+├── actions/          # Server actions (TanStack Start)
+├── components/       # React components
+│   ├── bible/       # Bible-specific components
+│   ├── collections/ # Collection management
+│   ├── forms/       # Form components
+│   ├── search/      # Search functionality
+│   ├── stories/     # Story management components
+│   ├── ui/          # Reusable UI components
+│   └── skeletons/   # Loading skeletons
+├── hooks/           # Custom React hooks
+├── lib/             # Utility libraries
+├── queries/         # TanStack Query configurations
+├── routes/          # TanStack Router routes
+├── schemas/         # Zod validation schemas
+├── server/          # Server-side functions
+├── styles/          # Global styles
+└── types/           # TypeScript type definitions
+```
+
+## Convex Schema
+
+The application uses Convex for real-time data with the following schema:
+
+- **collections** - User-created verse collections
+- **collectionVerses** - Individual verses within collections
+- **notes** - User-created notes for each chapter
+- **stories** - AI-generated stories based on biblical passages
+
+## Troubleshooting
+
+### Port Already in Use
+
+If port 5173 is already in use, you can specify a different port:
+
+```bash
+pnpm dev --port 3000
+```
+
+### Convex Connection Issues
+
+Ensure `npx convex dev` is running and the `VITE_CONVEX_URL` in your `.env` matches your Convex dashboard.
+
+### API.Bible Errors
+
+Verify your API key is correct and has access to Bible translations. Check the [API.Bible documentation](https://api.bible) for troubleshooting.
+
+### Database Connection Errors
+
+Ensure your `DATABASE_URL` is correctly formatted and your database is accessible. For Neon, check your connection string in the Neon dashboard.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart Guide" icon="rocket" href="/quickstart">
+    Learn how to use Your Bible as an end user
+  </Card>
+  <Card title="Contributing" icon="code">
+    Contribute to the project by submitting pull requests
+  </Card>
+</CardGroup>
+
+<Note>
+  For support, please open an issue in the GitHub repository or contact the development team.
+</Note>

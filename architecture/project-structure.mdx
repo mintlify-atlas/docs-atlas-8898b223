@@ -1,0 +1,490 @@
+---
+title: "Project Structure"
+description: "Detailed codebase organization and directory structure explained"
+---
+
+## Directory Overview
+
+Your Bible follows a clear, organized structure that separates concerns and follows framework conventions.
+
+```
+your-bible/
+├── src/                    # Source code
+│   ├── actions/           # Server actions
+│   ├── components/        # React components
+│   ├── db/               # Database configuration
+│   ├── hooks/            # Custom React hooks
+│   ├── lib/              # Utility libraries
+│   ├── queries/          # TanStack Query configs
+│   ├── routes/           # File-based routes
+│   ├── schemas/          # Zod validation schemas
+│   ├── server/           # Server-side utilities
+│   ├── styles/           # Global styles
+│   └── types/            # TypeScript type definitions
+├── convex/                # Convex backend
+│   ├── _generated/       # Auto-generated Convex types
+│   ├── collections.ts    # Collection mutations/queries
+│   ├── notes.ts          # Notes mutations/queries
+│   ├── stories.ts        # Story mutations/queries
+│   ├── verseCollections.ts
+│   └── schema.ts         # Database schema
+├── public/                # Static assets
+├── vite.config.ts        # Vite configuration
+├── tsconfig.json         # TypeScript configuration
+└── package.json          # Dependencies
+```
+
+## Source Directory (`src/`)
+
+### `src/actions/` - Server Actions
+
+Server-side functions that run exclusively on the backend. These actions handle sensitive operations and API calls.
+
+<Tabs>
+  <Tab title="Purpose">
+    Server actions provide secure backend functionality:
+    - **Authentication**: Login, signup, session management
+    - **API Integration**: Bible API requests, AI story generation
+    - **Rate Limiting**: Check and enforce rate limits
+    - **Data Fetching**: Server-side data retrieval
+    
+    These functions have access to environment variables and can perform operations that shouldn't be exposed to the client.
+  </Tab>
+  
+  <Tab title="Usage">
+    Server actions are called from client components:
+    
+    ```tsx
+    import { fetchBibleChapter } from '@/actions/bible'
+    
+    const data = await fetchBibleChapter({
+      bibleId: 'KJV',
+      chapterId: 'GEN.1'
+    })
+    ```
+    
+    They can only be imported and executed from server contexts or via TanStack Query.
+  </Tab>
+  
+  <Tab title="Files">
+    Typical server action files:
+    - `auth.ts` - Authentication actions (login, signup, session)
+    - `bible.ts` - Bible API interactions
+    - `stories.ts` - AI story generation
+    - `collections.ts` - Collection data fetching
+  </Tab>
+</Tabs>
+
+### `src/components/` - React Components
+
+Organized by feature and purpose for easy navigation and maintenance.
+
+<AccordionGroup>
+  <Accordion title="src/components/bible/ - Bible Reading Components">
+    Components for displaying Bible content:
+    - **ChapterDisplay**: Renders Bible chapter text
+    - **VerseHighlight**: Highlights selected verses
+    - **BibleNavigation**: Chapter navigation controls
+    - **TranslationSelector**: Bible version dropdown
+    
+    These components handle the core Bible reading experience.
+  </Accordion>
+  
+  <Accordion title="src/components/collections/ - Collection Management">
+    Components for verse collections feature:
+    - **CollectionList**: Display user collections
+    - **CollectionForm**: Create/edit collection
+    - **VerseCard**: Individual verse display
+    - **AddToCollection**: Add verse button/modal
+    
+    Integrates with Convex for real-time updates.
+  </Accordion>
+  
+  <Accordion title="src/components/search/ - Search Functionality">
+    Search interface components:
+    - **SearchBar**: Input and controls
+    - **SearchResults**: Paginated results display
+    - **SearchFilters**: Translation and options
+    - **HighlightedVerse**: Results with highlighted terms
+  </Accordion>
+  
+  <Accordion title="src/components/stories/ - Story Management">
+    AI story generation interface:
+    - **StoryForm**: Story creation parameters
+    - **StoryDisplay**: Show generated story
+    - **StoryList**: User's stories dashboard
+    - **StoryComparison**: Side-by-side Bible text and story
+  </Accordion>
+  
+  <Accordion title="src/components/forms/ - Form Components">
+    Reusable form components with TanStack Form:
+    - Form wrappers
+    - Input components
+    - Validation displays
+    - Submit handlers
+  </Accordion>
+  
+  <Accordion title="src/components/ui/ - Reusable UI Components">
+    Shadcn/ui components and custom UI primitives:
+    - Buttons
+    - Dialogs
+    - Dropdowns
+    - Inputs
+    - Tabs
+    - Cards
+    - Tooltips
+    
+    These are the building blocks for the application's UI.
+  </Accordion>
+  
+  <Accordion title="src/components/skeletons/ - Loading States">
+    Skeleton screens for loading states:
+    - **DefaultSkeleton**: Router-level loading
+    - **ChapterSkeleton**: Bible chapter loading
+    - **SearchSkeleton**: Search results loading
+    - **ListSkeleton**: List view loading
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  **Component Organization**: The component directory uses feature-based organization, making it easy to find related components and maintain feature boundaries.
+</Note>
+
+### `src/routes/` - File-Based Routing
+
+TanStack Router uses file-based routing conventions. Each file represents a route in the application.
+
+<CardGroup cols={2}>
+  <Card title="__root.tsx" icon="tree">
+    **Root Layout Component**
+    
+    Defines:
+    - HTML document structure
+    - Global head tags (meta, links, title)
+    - Root-level data loading (session)
+    - Context providers (Convex, Query)
+    - Shared layout (Header, Toaster)
+    
+    ```tsx
+    // Provides context to all routes
+    export const Route = createRootRouteWithContext<{
+      queryClient: QueryClient,
+      convexClient: ConvexReactClient,
+      convexQueryClient: ConvexQueryClient
+    }>()
+    ```
+  </Card>
+  
+  <Card title="Route Structure" icon="folder-tree">
+    Common route patterns:
+    - `index.tsx` - Home page (`/`)
+    - `bible.tsx` - Bible reading (`/bible`)
+    - `search.tsx` - Search page (`/search`)
+    - `collections.tsx` - Collections (`/collections`)
+    - `stories.tsx` - Stories (`/stories`)
+    - `auth/` - Auth routes (`/auth/*`)
+    
+    Nested routes create nested layouts automatically.
+  </Card>
+</CardGroup>
+
+<Accordion title="Route Features">
+  Each route file can export:
+  
+  - **`component`**: The React component to render
+  - **`beforeLoad`**: Server-side data loading (like session check)
+  - **`loader`**: Async data fetching before render
+  - **`head`**: Page-specific meta tags and title
+  - **`errorComponent`**: Error boundary for the route
+  
+  Example:
+  ```tsx
+  export const Route = createFileRoute('/bible')(__{
+    component: BiblePage,
+    beforeLoad: async () => {
+      // Check authentication
+    },
+    loader: async () => {
+      // Load initial data
+    },
+    head: () => ({
+      meta: [{ title: 'Read Bible - Your Bible' }]
+    })
+  })
+  ```
+</Accordion>
+
+### `src/hooks/` - Custom React Hooks
+
+Reusable React hooks for common functionality:
+
+- **useBible**: Bible data fetching and caching
+- **useCollections**: Collection management operations
+- **useAuth**: Authentication state and helpers
+- **useNotes**: Notes CRUD operations
+- **useStories**: Story generation and management
+
+<Tip>
+  Custom hooks encapsulate business logic and make components cleaner by extracting stateful logic into reusable functions.
+</Tip>
+
+### `src/lib/` - Utility Libraries
+
+Helper functions and utility modules:
+
+- **`utils.ts`**: Common utilities (className merging, formatters)
+- **`api.ts`**: API client configuration (Axios instances)
+- **`constants.ts`**: Application-wide constants
+- **`helpers.ts`**: Pure helper functions
+
+### `src/queries/` - TanStack Query Configurations
+
+Pre-configured query and mutation options:
+
+```tsx
+// Example query configuration
+export const bibleQueries = {
+  chapter: (bibleId: string, chapterId: string) => ({
+    queryKey: ['bible', bibleId, chapterId],
+    queryFn: () => fetchBibleChapter({ bibleId, chapterId })
+  })
+}
+```
+
+Centralizes query configuration for consistency and reusability.
+
+### `src/schemas/` - Zod Validation Schemas
+
+Type-safe validation schemas using Zod:
+
+- **`auth.ts`**: Login/signup form validation
+- **`collection.ts`**: Collection creation validation
+- **`story.ts`**: Story generation parameters
+- **`search.ts`**: Search query validation
+
+```tsx
+import { z } from 'zod'
+
+export const createCollectionSchema = z.object({
+  name: z.string().min(1).max(100),
+  description: z.string().optional()
+})
+```
+
+### `src/server/` - Server-Side Utilities
+
+Server-only utility functions:
+- Configuration helpers
+- Server-side data transformations
+- Backend integrations
+
+### `src/styles/` - Global Styles
+
+Global CSS and Tailwind configuration:
+- **`app.css`**: Global styles, Tailwind directives, custom CSS
+- Font imports
+- CSS variables
+- Theme configurations
+
+### `src/types/` - TypeScript Type Definitions
+
+Shared TypeScript types and interfaces:
+
+- **API response types**: Bible API, Gemini AI
+- **Database types**: Convex schema types
+- **Component prop types**: Shared interfaces
+- **Utility types**: Generic type helpers
+
+## Convex Backend (`convex/`)
+
+The Convex directory contains backend logic and database schema.
+
+<CardGroup cols={2}>
+  <Card title="schema.ts" icon="database">
+    **Database Schema Definition**
+    
+    Defines tables and their structure:
+    - Collections table
+    - Notes table
+    - Stories table
+    - Verse collections table
+    
+    Uses Convex schema builder for type-safe tables.
+  </Card>
+  
+  <Card title="*.ts Files" icon="function">
+    **Queries and Mutations**
+    
+    Each file exports:
+    - **Queries**: Read data from database
+    - **Mutations**: Write/update/delete data
+    
+    Examples:
+    - `collections.ts` - Collection CRUD
+    - `notes.ts` - Notes operations
+    - `stories.ts` - Story management
+  </Card>
+</CardGroup>
+
+<Accordion title="Convex File Structure">
+  ```
+  convex/
+  ├── _generated/              # Auto-generated by Convex
+  │   ├── api.d.ts            # API type definitions
+  │   ├── dataModel.d.ts      # Database model types
+  │   └── server.d.ts         # Server helper types
+  ├── collections.ts          # Collection queries/mutations
+  ├── notes.ts                # Notes queries/mutations
+  ├── stories.ts              # Story queries/mutations
+  ├── verseCollections.ts     # Verse management
+  └── schema.ts               # Database schema
+  ```
+</Accordion>
+
+<Warning>
+  **Never edit `_generated/` files** - These are automatically generated by Convex when you run `npx convex dev`. Manual changes will be overwritten.
+</Warning>
+
+## Configuration Files
+
+<Tabs>
+  <Tab title="vite.config.ts">
+    Vite build configuration:
+    
+    ```ts
+    export default defineConfig({
+      server: { port: 3000 },
+      plugins: [
+        tsConfigPaths(),
+        tanstackStart({ target: 'vercel' })
+      ],
+      ssr: {
+        noExternal: ['@clerk/tanstack-react-start']
+      }
+    })
+    ```
+    
+    - Development server on port 3000
+    - TanStack Start plugin configured for Vercel
+    - Path aliases via tsConfigPaths
+    - SSR configuration for external packages
+  </Tab>
+  
+  <Tab title="tsconfig.json">
+    TypeScript compiler configuration:
+    
+    ```json
+    {
+      "compilerOptions": {
+        "jsx": "react-jsx",
+        "moduleResolution": "Bundler",
+        "module": "ESNext",
+        "target": "ES2022",
+        "strictNullChecks": true,
+        "baseUrl": ".",
+        "paths": {
+          "@/*": ["./src/*"]
+        }
+      }
+    }
+    ```
+    
+    - Modern ES2022 target
+    - React JSX transform
+    - Strict null checks
+    - Path aliases (`@/*` → `src/*`)
+  </Tab>
+  
+  <Tab title="package.json">
+    Project metadata and scripts:
+    
+    ```json
+    {
+      "scripts": {
+        "dev": "vite dev",
+        "build": "vite build"
+      },
+      "type": "module"
+    }
+    ```
+    
+    - ESM module type
+    - Simple build scripts
+    - All dependencies listed with versions
+  </Tab>
+</Tabs>
+
+## Code Organization Patterns
+
+<CardGroup cols={2}>
+  <Card title="Feature-Based Organization" icon="folder">
+    Components organized by feature rather than type:
+    
+    ```
+    components/
+    ├── bible/      # All Bible-related components
+    ├── collections/# All collection components
+    └── stories/    # All story components
+    ```
+    
+    Makes it easy to find and maintain related code.
+  </Card>
+  
+  <Card title="Colocation" icon="link">
+    Related files are kept together:
+    
+    - Component and its styles
+    - Hooks with their components
+    - Types with their modules
+    
+    Reduces cognitive load and import paths.
+  </Card>
+  
+  <Card title="Path Aliases" icon="at">
+    Use `@/` prefix for absolute imports:
+    
+    ```tsx
+    // Instead of:
+    import { Button } from '../../../components/ui/button'
+    
+    // Use:
+    import { Button } from '@/components/ui/button'
+    ```
+    
+    Cleaner imports and easier refactoring.
+  </Card>
+  
+  <Card title="Separation of Concerns" icon="layer-group">
+    Clear boundaries between:
+    
+    - **Frontend**: Components, hooks, UI
+    - **Backend**: Actions, Convex functions
+    - **Shared**: Types, schemas, utilities
+    
+    Prevents mixing of concerns and improves maintainability.
+  </Card>
+</CardGroup>
+
+## Import Patterns
+
+<Accordion title="Recommended Import Order">
+  ```tsx
+  // 1. External dependencies
+  import { useQuery } from '@tanstack/react-query'
+  import { Link } from '@tanstack/react-router'
+  
+  // 2. Internal modules (aliased)
+  import { Button } from '@/components/ui/button'
+  import { useBible } from '@/hooks/useBible'
+  
+  // 3. Types
+  import type { BibleChapter } from '@/types/bible'
+  
+  // 4. Relative imports (if necessary)
+  import { helper } from './utils'
+  ```
+</Accordion>
+
+<Tip>
+  This structure promotes scalability, maintainability, and developer productivity by providing clear conventions and organized code boundaries.
+</Tip>
